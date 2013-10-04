@@ -13,17 +13,12 @@ namespace ModernHttpClient
 {
     public class AFNetworkHandler : HttpMessageHandler
     {
-        AFHTTPClient handler;
-
-        public AFNetworkHandler()
-        {
-            handler = new AFHTTPClient();
-        }
-
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var ms = new MemoryStream();
-            await request.Content.CopyToAsync(ms);
+            if (request.Content != null) {
+                await request.Content.CopyToAsync(ms).ConfigureAwait(false);
+            }
 
             var rq = new NSMutableUrlRequest() {
                 AllowsCellularAccess = true,
@@ -37,11 +32,13 @@ namespace ModernHttpClient
                 Url = new NSUrl(request.RequestUri.ToString()),
             };
 
+            var host = request.RequestUri.GetLeftPart(UriPartial.Authority);
             var op = default(AFHTTPRequestOperation);
             var err = default(NSError);
+            var handler = new AFHTTPClient(new NSUrl(host));
 
             try {
-                op = await enqueueOperation(new AFHTTPRequestOperation(rq), cancellationToken);
+                op = await enqueueOperation(handler, new AFHTTPRequestOperation(rq), cancellationToken);
             } catch (ApplicationException ex) {
                 op = (AFHTTPRequestOperation)ex.Data["op"];
                 err = (NSError)ex.Data["err"];
@@ -54,19 +51,19 @@ namespace ModernHttpClient
             }
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
-                Content = new ByteArrayContent(op.ResponseData.ToArray()),
+                Content = new AFHttpContent(op),
                 RequestMessage = request,
                 ReasonPhrase = (err != null ? err.LocalizedDescription : null),
             };
 
             foreach(var v in resp.AllHeaderFields) {
-                ret.Headers.Add(v.Key.ToString(), v.Value.ToString());
+                ret.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
             }
 
             return ret;
         }
 
-        Task<AFHTTPRequestOperation> enqueueOperation(AFHTTPRequestOperation operation, CancellationToken cancelToken)
+        Task<AFHTTPRequestOperation> enqueueOperation(AFHTTPClient handler, AFHTTPRequestOperation operation, CancellationToken cancelToken)
         {
             var tcs = new TaskCompletionSource<AFHTTPRequestOperation>();
             if (cancelToken.IsCancellationRequested) {
@@ -99,6 +96,28 @@ namespace ModernHttpClient
             });
 
             return tcs.Task;
+        }
+    }
+
+    class AFHttpContent : HttpContent
+    {
+        AFHTTPRequestOperation completedOp;
+
+        public AFHttpContent(AFHTTPRequestOperation op)
+        {
+            completedOp = op;
+        }
+
+        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
+        {
+            var ms = new MemoryStream(completedOp.ResponseData.ToArray());
+            await ms.CopyToAsync(stream).ConfigureAwait(false);
+        }
+
+        protected override bool TryComputeLength(out long length)
+        {
+            length = completedOp.ResponseData.Length;
+            return true;
         }
     }
 }
