@@ -5,8 +5,6 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.iOS", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFNetworking", "vendor\afnetworking\AFNetworking\AFNetworking.csproj", "{8736B208-9B6B-4B35-9817-04106F2DAF88}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.Tests_iOS", "test\ModernHttpClient.Tests_iOS.csproj", "{EB65180A-D624-4B51-B7EA-E1E720F247D4}"
-EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "OkHttp", "vendor\okhttp\OkHttp\OkHttp.csproj", "{133270E5-3A11-4A4A-A4AD-1D89FC9DBAAF}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.Android", "src\ModernHttpClient.Android\ModernHttpClient.Android.csproj", "{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}"
@@ -71,22 +69,6 @@ Global
 		{8736B208-9B6B-4B35-9817-04106F2DAF88}.Release|iPhone.Build.0 = Release|Any CPU
 		{8736B208-9B6B-4B35-9817-04106F2DAF88}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
 		{8736B208-9B6B-4B35-9817-04106F2DAF88}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Ad-Hoc|iPhone.ActiveCfg = Ad-Hoc|iPhone
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Ad-Hoc|iPhone.Build.0 = Ad-Hoc|iPhone
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.AppStore|iPhone.ActiveCfg = AppStore|iPhone
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.AppStore|iPhone.Build.0 = AppStore|iPhone
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Debug|Any CPU.ActiveCfg = Debug|iPhoneSimulator
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Debug|Any CPU.Build.0 = Debug|iPhoneSimulator
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Debug|iPhone.ActiveCfg = Debug|iPhone
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Debug|iPhone.Build.0 = Debug|iPhone
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Debug|iPhoneSimulator.ActiveCfg = Debug|iPhoneSimulator
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Debug|iPhoneSimulator.Build.0 = Debug|iPhoneSimulator
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Release|Any CPU.ActiveCfg = Release|iPhoneSimulator
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Release|Any CPU.Build.0 = Release|iPhoneSimulator
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Release|iPhone.ActiveCfg = Release|iPhone
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Release|iPhone.Build.0 = Release|iPhone
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Release|iPhoneSimulator.ActiveCfg = Release|iPhoneSimulator
-		{EB65180A-D624-4B51-B7EA-E1E720F247D4}.Release|iPhoneSimulator.Build.0 = Release|iPhoneSimulator
 		{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}.Ad-Hoc|iPhone.ActiveCfg = Release|Any CPU
 		{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}.Ad-Hoc|iPhone.Build.0 = Release|Any CPU
 		{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}.AppStore|iPhone.ActiveCfg = Release|Any CPU
@@ -105,6 +87,6 @@ Global
 		{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = test\ModernHttpClient.Tests_iOS.csproj
+		StartupItem = src\ModernHttpClient.iOS\ModernHttpClient.iOS.csproj
 	EndGlobalSection
 EndGlobal
