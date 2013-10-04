@@ -1,0 +1,26 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.iOS", "src\ModernHttpClient.iOS\ModernHttpClient.iOS.csproj", "{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "AFNetworking", "vendor\afnetworking\AFNetworking\AFNetworking.csproj", "{8736B208-9B6B-4B35-9817-04106F2DAF88}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}.Release|Any CPU.Build.0 = Release|Any CPU
+		{8736B208-9B6B-4B35-9817-04106F2DAF88}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{8736B208-9B6B-4B35-9817-04106F2DAF88}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{8736B208-9B6B-4B35-9817-04106F2DAF88}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{8736B208-9B6B-4B35-9817-04106F2DAF88}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(MonoDevelopProperties) = preSolution
+		StartupItem = src\ModernHttpClient.iOS\ModernHttpClient.iOS.csproj
+	EndGlobalSection
+EndGlobal
