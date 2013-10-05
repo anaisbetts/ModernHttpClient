@@ -4,6 +4,7 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Threading.Tasks;
 using System.Threading;
+using System.Collections.Generic;
 using AFNetworking;
 using MonoTouch.Foundation;
 using System.IO;
@@ -13,6 +14,8 @@ namespace ModernHttpClient
 {
     public class AFNetworkHandler : HttpMessageHandler
     {
+        static Dictionary<NSMutableUrlRequest, object[]> pins = new Dictionary<NSMutableUrlRequest, object[]>();
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var ms = new MemoryStream();
@@ -37,6 +40,10 @@ namespace ModernHttpClient
             var err = default(NSError);
             var handler = new AFHTTPClient(new NSUrl(host));
 
+            // NB: I have no idea how async methods affects object lifetime and
+            // GC'ing of local variables, soooooooo....
+            lock (pins) { pins[rq] = new object[] { op, handler, }; }
+
             try {
                 op = await enqueueOperation(handler, new AFHTTPRequestOperation(rq), cancellationToken);
             } catch (ApplicationException ex) {
@@ -51,7 +58,7 @@ namespace ModernHttpClient
             }
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
-                Content = new AFHttpContent(op),
+                Content = new ByteArrayContent(op.ResponseData.ToArray()),
                 RequestMessage = request,
                 ReasonPhrase = (err != null ? err.LocalizedDescription : null),
             };
@@ -60,6 +67,7 @@ namespace ModernHttpClient
                 ret.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
             }
 
+            lock (pins) { pins.Remove(rq); }
             return ret;
         }
 
@@ -99,24 +107,22 @@ namespace ModernHttpClient
         }
     }
 
-    class AFHttpContent : HttpContent
+    class ByteArrayHttpContent : HttpContent
     {
-        AFHTTPRequestOperation completedOp;
-
-        public AFHttpContent(AFHTTPRequestOperation op)
+        byte[] data;
+        public ByteArrayHttpContent(byte[] data)
         {
-            completedOp = op;
+            this.data = data;
         }
 
         protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
         {
-            var ms = new MemoryStream(completedOp.ResponseData.ToArray());
-            await ms.CopyToAsync(stream).ConfigureAwait(false);
+            await (new MemoryStream(data)).CopyToAsync(stream);
         }
 
         protected override bool TryComputeLength(out long length)
         {
-            length = completedOp.ResponseData.Length;
+            length = data.Length;
             return true;
         }
     }
