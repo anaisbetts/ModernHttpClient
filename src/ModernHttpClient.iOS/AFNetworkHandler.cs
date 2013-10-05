@@ -54,6 +54,7 @@ namespace ModernHttpClient
             var resp = (NSHttpUrlResponse)op.Response;
 
             if (op.IsCancelled) {
+                lock (pins) { pins.Remove(rq); }
                 throw new TaskCanceledException();
             }
 
