@@ -83,13 +83,16 @@ namespace ModernHttpClient
             bool completed = false;
             operation.SetCompletionBlockWithSuccess(
                 (op, _) => { 
+                    if (completed) return;
+
                     completed = true;
                     tcs.SetResult(op);
                 },
                 (op, err) => {
-                    completed = true;
+                    if (completed) return;
 
                     // NB: Secret Handshake is Secret
+                    completed = true;
                     var ex = new ApplicationException();
                     ex.Data.Add("op", op);
                     ex.Data.Add("err", err);
@@ -100,6 +103,7 @@ namespace ModernHttpClient
             cancelToken.Register(() => {
                 if (completed) return;
 
+                completed = true;
                 operation.Cancel();
                 tcs.SetCanceled();
             });
