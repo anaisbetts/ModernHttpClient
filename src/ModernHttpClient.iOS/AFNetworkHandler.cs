@@ -18,16 +18,19 @@ namespace ModernHttpClient
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            IEnumerable<KeyValuePair<string, IEnumerable<string>>> headers = request.Headers;
+
             var ms = new MemoryStream();
             if (request.Content != null) {
                 await request.Content.CopyToAsync(ms).ConfigureAwait(false);
+                headers = headers.Union(request.Content.Headers);
             }
 
             var rq = new NSMutableUrlRequest() {
                 AllowsCellularAccess = true,
                 Body = NSData.FromArray(ms.ToArray()),
                 CachePolicy = NSUrlRequestCachePolicy.UseProtocolCachePolicy,
-                Headers = request.Headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
+                Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
                     acc.Add(new NSString(x.Key), new NSString(x.Value.LastOrDefault()));
                     return acc;
                 }),
@@ -132,4 +135,3 @@ namespace ModernHttpClient
         }
     }
 }
-
