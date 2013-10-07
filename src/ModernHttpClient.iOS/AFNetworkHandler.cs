@@ -62,7 +62,7 @@ namespace ModernHttpClient
             }
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
-                Content = new ByteArrayContent(op.ResponseData.ToArray()),
+                Content = new StreamContent(new NSDataStream(op.ResponseData)),
                 RequestMessage = request,
                 ReasonPhrase = (err != null ? err.LocalizedDescription : null),
             };
@@ -115,23 +115,22 @@ namespace ModernHttpClient
         }
     }
 
-    class ByteArrayHttpContent : HttpContent
+    unsafe class NSDataStream : UnmanagedMemoryStream
     {
-        byte[] data;
-        public ByteArrayHttpContent(byte[] data)
+        readonly NSData _data;
+
+        public NSDataStream(NSData data) : base((byte*)data.Bytes, data.Length)
         {
-            this.data = data;
+            _data = data;
         }
 
-        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
+        protected override void Dispose(bool disposing)
         {
-            await (new MemoryStream(data)).CopyToAsync(stream);
-        }
+            if (disposing) {
+                _data.Dispose();
+            }
 
-        protected override bool TryComputeLength(out long length)
-        {
-            length = data.Length;
-            return true;
+            base.Dispose(disposing);
         }
     }
 }
