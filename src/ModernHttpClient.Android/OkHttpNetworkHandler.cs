@@ -26,12 +26,14 @@ namespace ModernHttpClient
             var rq = client.Open(new Java.Net.URL(request.RequestUri.ToString()));
             cancellationToken.Register(() => client.Cancel(rq));
 
+            foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
+
             if (request.Content != null) {
                 await request.Content.CopyToAsync(rq.OutputStream).ConfigureAwait(false);
                 rq.OutputStream.Close();
-            }
 
-            foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
+                foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
+            }
 
             var body = new MemoryStream();
             var reason = default(string);
@@ -84,4 +86,3 @@ namespace ModernHttpClient
         }
     }
 }
-

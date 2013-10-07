@@ -88,5 +88,20 @@ Global
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
 		StartupItem = src\ModernHttpClient.iOS\ModernHttpClient.iOS.csproj
+		Policies = $0
+		$0.DotNetNamingPolicy = $1
+		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
+		$1.ResourceNamePolicy = FileFormatDefault
+		$0.TextStylePolicy = $2
+		$2.FileWidth = 120
+		$2.inheritsSet = VisualStudio
+		$2.inheritsScope = text/plain
+		$2.scope = text/x-csharp
+		$0.CSharpFormattingPolicy = $3
+		$3.ElseIfNewLinePlacement = SameLine
+		$3.AfterDelegateDeclarationParameterComma = True
+		$3.inheritsSet = Mono
+		$3.inheritsScope = text/x-csharp
+		$3.scope = text/x-csharp
 	EndGlobalSection
 EndGlobal
