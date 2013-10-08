@@ -17,7 +17,6 @@ ModernHttpClient.Android.dll: OkHttp.dll
 	mkdir -p ./build/android
 	mv ./src/ModernHttpClient.Android/bin/Release/* ./build/android/
 
-
 ModernHttpClient.iOS.dll: AFNetworking.dll
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient.iOS/ModernHttpClient.iOS.csproj
 	mkdir -p ./build/ios
