@@ -14,14 +14,14 @@ OkHttp.dll: vendor
 
 ModernHttpClient.Android.dll: OkHttp.dll
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient.Android/ModernHttpClient.Android.csproj
-	mkdir -p ./build
-	mv ./src/ModernHttpClient.Android/bin/Release/* ./build/
+	mkdir -p ./build/android
+	mv ./src/ModernHttpClient.Android/bin/Release/* ./build/android/
 
 
 ModernHttpClient.iOS.dll: AFNetworking.dll
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient.iOS/ModernHttpClient.iOS.csproj
-	mkdir -p ./build
-	mv ./src/ModernHttpClient.iOS/bin/Release/* ./build/
+	mkdir -p ./build/ios
+	mv ./src/ModernHttpClient.iOS/bin/Release/* ./build/ios/
 
 ModernHttpClient.dll: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
 
