@@ -3,6 +3,7 @@ MDTOOL=/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool
 all: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
 
 vendor:
+	git submodule sync
 	git submodule update --init --recursive
 
 AFNetworking.dll: vendor
