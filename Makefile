@@ -1,6 +1,6 @@
 MDTOOL=/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool
 
-all: ModernHttpClient.dll
+all: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
 
 vendor:
 	git submodule update --init --recursive
@@ -22,8 +22,6 @@ ModernHttpClient.iOS.dll: AFNetworking.dll
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient.iOS/ModernHttpClient.iOS.csproj
 	mkdir -p ./build/ios
 	mv ./src/ModernHttpClient.iOS/bin/Release/* ./build/ios/
-
-ModernHttpClient.dll: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
 
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
