@@ -3,4 +3,4 @@
 	url = https://github.com/paulcbetts/OkHttp-Xamarin.git
 [submodule "vendor/afnetworking"]
 	path = vendor/afnetworking
-	url = https://github.com/paulcbetts/AFNetworking-Xamarin.git
+	url = https://github.com/thefactory/AFNetworking-Sharp.git

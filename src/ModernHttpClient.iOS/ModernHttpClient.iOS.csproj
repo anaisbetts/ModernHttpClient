@@ -22,6 +22,11 @@
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <CustomCommands>
+      <CustomCommands>
+        <Command type="BeforeBuild" command="make AFNetworking.dll" workingdir="${SolutionDir}" />
+      </CustomCommands>
+    </CustomCommands>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
@@ -32,26 +37,19 @@
     <ConsolePause>false</ConsolePause>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
   </PropertyGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
     <Reference Include="System" />
     <Reference Include="System.Xml" />
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
     <Reference Include="System.Net.Http" />
-  </ItemGroup>
-  <ItemGroup>
     <Folder Include="Resources\" />
     <Folder Include="Properties\" />
-  </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\..\vendor\afnetworking\AFNetworking\AFNetworking.csproj">
-      <Project>{8736B208-9B6B-4B35-9817-04106F2DAF88}</Project>
-      <Name>AFNetworking</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <Compile Include="AFNetworkHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Reference Include="AFNetworking">
+      <HintPath>..\..\vendor\afnetworking\AFNetworking.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

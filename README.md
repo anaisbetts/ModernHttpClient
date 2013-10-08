@@ -25,6 +25,5 @@ var httpClient = new HttpClient(new OkHttpNetworkHandler());
 ## Building
 
 ```sh
-git submodule update --init --recursive
-/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool build -c:Release ./ModernHttpClient.sln
+make
 ```
