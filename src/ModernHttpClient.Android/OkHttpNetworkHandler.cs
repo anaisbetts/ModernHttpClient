@@ -24,18 +24,17 @@ namespace ModernHttpClient
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var rq = client.Open(new Java.Net.URL(request.RequestUri.ToString()));
+            rq.RequestMethod = request.Method.Method.ToUpperInvariant();
             cancellationToken.Register(() => client.Cancel(rq));
 
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
-            rq.RequestMethod = request.Method.Method.ToUpperInvariant();
 
             if (request.Content != null) {
+                foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
+
                 await request.Content.CopyToAsync(rq.OutputStream).ConfigureAwait(false);
                 rq.OutputStream.Close();
-
-                foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
             }
-
 
             var body = new MemoryStream();
             var reason = default(string);
