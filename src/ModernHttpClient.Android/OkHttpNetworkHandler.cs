@@ -27,6 +27,7 @@ namespace ModernHttpClient
             cancellationToken.Register(() => client.Cancel(rq));
 
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
+            rq.RequestMethod = request.Method.Method.ToUpperInvariant();
 
             if (request.Content != null) {
                 await request.Content.CopyToAsync(rq.OutputStream).ConfigureAwait(false);
@@ -35,8 +36,10 @@ namespace ModernHttpClient
                 foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
             }
 
+
             var body = new MemoryStream();
             var reason = default(string);
+
 
             try {
                 await Task.Run(() => {
