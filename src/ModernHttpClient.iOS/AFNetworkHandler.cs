@@ -35,7 +35,7 @@ namespace ModernHttpClient
                     return acc;
                 }),
                 HttpMethod = request.Method.ToString().ToUpperInvariant(),
-                Url = new NSUrl(request.RequestUri.ToString()),
+                Url = NSUrl.FromString(request.RequestUri.AbsoluteUri),
             };
 
             var host = request.RequestUri.GetLeftPart(UriPartial.Authority);
