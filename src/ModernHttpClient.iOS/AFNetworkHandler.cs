@@ -60,9 +60,12 @@ namespace ModernHttpClient
                 lock (pins) { pins.Remove(rq); }
                 throw new TaskCanceledException();
             }
+            
+            var respData = op.ResponseData;
+            var httpContent = new StreamContent (respData == null || respData.Length == 0 ? Stream.Null : respData.AsStream ());
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
-                Content = new StreamContent(respData.AsStream()),
+                Content = httpContent,
                 RequestMessage = request,
                 ReasonPhrase = (err != null ? err.LocalizedDescription : null),
             };
