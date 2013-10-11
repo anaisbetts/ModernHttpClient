@@ -62,7 +62,7 @@ namespace ModernHttpClient
             }
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
-                Content = new StreamContent(new NSDataStream(op.ResponseData)),
+                Content = new StreamContent(respData.AsStream()),
                 RequestMessage = request,
                 ReasonPhrase = (err != null ? err.LocalizedDescription : null),
             };
@@ -112,25 +112,6 @@ namespace ModernHttpClient
             });
 
             return tcs.Task;
-        }
-    }
-
-    unsafe class NSDataStream : UnmanagedMemoryStream
-    {
-        readonly NSData _data;
-
-        public NSDataStream(NSData data) : base((byte*)data.Bytes, data.Length)
-        {
-            _data = data;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) {
-                _data.Dispose();
-            }
-
-            base.Dispose(disposing);
         }
     }
 }
