@@ -56,6 +56,10 @@ namespace ModernHttpClient
 
             var resp = (NSHttpUrlResponse)op.Response;
 
+            if (err != null && resp == null && err.Domain == NSError.NSUrlErrorDomain && err.Code == -1009) {
+                throw new WebException (err.LocalizedDescription, WebExceptionStatus.NameResolutionFailure);
+            }
+
             if (op.IsCancelled) {
                 lock (pins) { pins.Remove(rq); }
                 throw new TaskCanceledException();
