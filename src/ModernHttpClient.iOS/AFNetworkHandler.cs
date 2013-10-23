@@ -56,13 +56,20 @@ namespace ModernHttpClient
 
             var resp = (NSHttpUrlResponse)op.Response;
 
+            if (err != null && resp == null && err.Domain == NSError.NSUrlErrorDomain && err.Code == -1009) {
+                throw new WebException (err.LocalizedDescription, WebExceptionStatus.NameResolutionFailure);
+            }
+
             if (op.IsCancelled) {
                 lock (pins) { pins.Remove(rq); }
                 throw new TaskCanceledException();
             }
+            
+            var respData = op.ResponseData;
+            var httpContent = new StreamContent (respData == null || respData.Length == 0 ? Stream.Null : respData.AsStream ());
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
-                Content = new StreamContent(new NSDataStream(op.ResponseData)),
+                Content = httpContent,
                 RequestMessage = request,
                 ReasonPhrase = (err != null ? err.LocalizedDescription : null),
             };
@@ -112,25 +119,6 @@ namespace ModernHttpClient
             });
 
             return tcs.Task;
-        }
-    }
-
-    unsafe class NSDataStream : UnmanagedMemoryStream
-    {
-        readonly NSData _data;
-
-        public NSDataStream(NSData data) : base((byte*)data.Bytes, data.Length)
-        {
-            _data = data;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (disposing) {
-                _data.Dispose();
-            }
-
-            base.Dispose(disposing);
         }
     }
 }
