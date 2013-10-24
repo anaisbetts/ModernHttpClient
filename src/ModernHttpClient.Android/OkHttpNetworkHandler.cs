@@ -25,7 +25,7 @@ namespace ModernHttpClient
         {
             var rq = client.Open(new Java.Net.URL(request.RequestUri.ToString()));
             rq.RequestMethod = request.Method.Method.ToUpperInvariant();
-            cancellationToken.Register(() => client.Cancel(rq));
+            //cancellationToken.Register(() => client.Cancel(rq));
 
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
 
@@ -38,7 +38,6 @@ namespace ModernHttpClient
 
             var body = new MemoryStream();
             var reason = default(string);
-
 
             try {
                 await Task.Run(() => {
