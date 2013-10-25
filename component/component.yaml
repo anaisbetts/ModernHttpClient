@@ -1,0 +1,28 @@
+%YAML 1.2
+---
+name: ModernHttpClient
+version: 0.9
+id: "modernhttpclient"
+publisher: Paul Betts
+publisher-url: http://blog.paulbetts.org/
+summary: Write your app using System.Net.Http, but drop this library in and it will go drastically faster. 
+license: License.md
+details: Details.md
+getting-started: GettingStarted.md
+icons: 
+  - icon_128x128.png
+  - icon_512x512.png
+libraries: 
+  ios: 
+    - ../build/MonoTouch/AFNetworking.dll
+    - ../build/MonoTouch/ModernHttpClient.iOS.dll
+  android:
+    - ../build/MonoAndroid/OkHttp.dll
+    - ../build/MonoAndroid/ModernHttpClient.Android.dll
+samples: 
+  - name: "HttpClient.iOS Sample"
+    path: ../samples/HttpClient.iOS/HttpClient.iOS.sln
+  - name: "HttpClient.Android Sample"
+    path: ../samples/HttpClient.Android/HttpClient.Android.sln
+...
+
