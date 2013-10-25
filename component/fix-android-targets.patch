@@ -1,0 +1,13 @@
+diff --git a/OkHttp/OkHttp.csproj b/OkHttp/OkHttp.csproj
+index d2148d3..31c20a0 100644
+--- a/OkHttp/OkHttp.csproj
++++ b/OkHttp/OkHttp.csproj
+@@ -11,7 +11,7 @@
+     <RootNamespace>OkHttp</RootNamespace>
+     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
+     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
+-    <AndroidUseLatestPlatformSdk>True</AndroidUseLatestPlatformSdk>
++    <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
+     <AssemblyName>OkHttp</AssemblyName>
+     <TargetFrameworkVersion>v2.3</TargetFrameworkVersion>
+   </PropertyGroup>

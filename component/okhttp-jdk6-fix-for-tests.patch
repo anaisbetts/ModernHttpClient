@@ -1,0 +1,33 @@
+diff --git a/okhttp/src/test/java/com/squareup/okhttp/internal/http/URLConnectionTest.java b/okhttp/src/test/java/com/squareup/okhttp/internal/http/URLConnectionTest.java
+index 5af2812..1c7a790 100644
+--- a/okhttp/src/test/java/com/squareup/okhttp/internal/http/URLConnectionTest.java
++++ b/okhttp/src/test/java/com/squareup/okhttp/internal/http/URLConnectionTest.java
+@@ -2508,6 +2508,7 @@ public final class URLConnectionTest {
+     }
+   }
+ 
++/*
+   @Test public void veryLargeFixedLengthRequest() throws Exception {
+     server.setBodyLimit(0);
+     server.enqueue(new MockResponse());
+@@ -2529,6 +2530,7 @@ public final class URLConnectionTest {
+     RecordedRequest request = server.takeRequest();
+     assertEquals(Long.toString(contentLength), request.getHeader("Content-Length"));
+   }
++*/
+ 
+   /** Returns a gzipped copy of {@code bytes}. */
+   public byte[] gzip(byte[] bytes) throws IOException {
+diff --git a/okhttp/src/main/java/com/squareup/okhttp/OkHttpClient.java b/okhttp/src/main/java/com/squareup/okhttp/OkHttpClient.java
+index 945da1b..2fe9996 100644
+--- a/okhttp/src/main/java/com/squareup/okhttp/OkHttpClient.java
++++ b/okhttp/src/main/java/com/squareup/okhttp/OkHttpClient.java
+@@ -331,7 +331,7 @@ public final class OkHttpClient implements URLStreamHandlerFactory {
+    * Cancels all scheduled tasks tagged with {@code tag}. Requests that are already
+    * in flight might not be canceled.
+    */
+-  /* OkHttp 2.0: public */ void cancel(Object tag) {
++  public void cancel(Object tag) {
+     dispatcher.cancel(tag);
+   }
+ 
