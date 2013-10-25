@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+	<string name="app_name">HTTP Client Sample</string>
+	<string name="select_api">Select API:</string>
+	<string name="http_webreq">WebRequest</string>
+	<string name="http_standard">HttpClient</string>
+	<string name="http_okhttp">HttpClient/OkHttp</string>
+	<string name="issue_request">Issue HTTP Request</string>
+	<string name="html_returned">The HTML returned by the server:</string>
+	<string name="no_data">No data.</string>
+	<string name="busy_msg">Retrieving data...</string>
+</resources>

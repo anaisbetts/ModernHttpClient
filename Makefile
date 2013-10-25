@@ -1,4 +1,6 @@
-MDTOOL=/Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool
+MDTOOL ?= /Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool
+
+.PHONY: all clean
 
 all: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
 
@@ -25,5 +27,5 @@ ModernHttpClient.iOS.dll: AFNetworking.dll
 
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
-	rm -r vendor
-	rm -r build
+	rm -rf vendor
+	rm -rf build
