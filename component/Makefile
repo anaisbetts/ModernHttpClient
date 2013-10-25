@@ -27,7 +27,7 @@ clean:
 .PHONY: all xam component install uninstall clean vendor
 
 # Path to xamarin-component.exe (get it from https://components.xamarin.com/guidelines)
-XAMARIN_COMPONENT ?= /usr/libexec/xamarin-component/xamarin-component.exe
+XAMARIN_COMPONENT ?= ./xamarin-component.exe
 # Path to mono, which by default should be on your PATH.
 MONO ?= mono
 
