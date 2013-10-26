@@ -4,3 +4,5 @@ bin/
 obj/
 
 *.userprefs
+build/
+*.xam
