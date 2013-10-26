@@ -18,6 +18,7 @@ namespace Playground.Android
     {
         int count = 1;
 
+        CancellationTokenSource currentToken;
         protected override void OnCreate (Bundle bundle)
         {
             base.OnCreate (bundle);
@@ -28,18 +29,24 @@ namespace Playground.Android
             // Get our button from the layout resource,
             // and attach an event to it
             var button = FindViewById<Button>(Resource.Id.doIt);
+            var cancel = FindViewById<Button>(Resource.Id.cancelButton);
             var result = FindViewById<TextView>(Resource.Id.result);
+
+            cancel.Click += (o, e) => {
+                Console.WriteLine("Canceled token {0:x8}", this.currentToken.Token.GetHashCode());
+                this.currentToken.Cancel();
+            };
             
             button.Click += async (o, e) => {
                 var client = new HttpClient(new OkHttpNetworkHandler());
-                var cts = new CancellationTokenSource();
+                currentToken = new CancellationTokenSource();
                 var st = new Stopwatch();
-
-                Task.Delay(1000).ContinueWith(_ => cts.Cancel());
 
                 st.Start();
                 try {
-                    var resp = await client.GetAsync("https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip", HttpCompletionOption.ResponseContentRead, cts.Token);
+                    var resp = await client.GetAsync("https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip", HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
+                    result.Text = "Got the headers!";
+
                     var bytes = await resp.Content.ReadAsByteArrayAsync();
                     result.Text = String.Format("Read {0} bytes", bytes.Length);
                 } catch (Exception ex) {

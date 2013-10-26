@@ -8,6 +8,11 @@
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
         android:text="@string/hello" />
+    <Button
+        android:text="Cancel!"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/cancelButton" />
     <TextView
         android:text="Here's what happened"
         android:textAppearance="?android:attr/textAppearanceMedium"
