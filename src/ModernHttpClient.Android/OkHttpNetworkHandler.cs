@@ -25,14 +25,14 @@ namespace ModernHttpClient
         {
             var rq = client.Open(new Java.Net.URL(request.RequestUri.ToString()));
             rq.RequestMethod = request.Method.Method.ToUpperInvariant();
-            //cancellationToken.Register(() => client.Cancel(rq));
 
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
 
             if (request.Content != null) {
                 foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
 
-                await request.Content.CopyToAsync(rq.OutputStream).ConfigureAwait(false);
+                var contentStream = await request.Content.ReadAsStreamAsync();
+                await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
                 rq.OutputStream.Close();
             }
 
@@ -40,9 +40,7 @@ namespace ModernHttpClient
             var reason = default(string);
 
             try {
-                await Task.Run(() => {
-                    rq.InputStream.CopyTo(body);
-                }).ConfigureAwait(false);
+                await copyToAsync(rq.InputStream, body, cancellationToken);
             } catch (Exception ex) {
                 reason = ex.Message;
             }
@@ -65,6 +63,21 @@ namespace ModernHttpClient
             }
 
             return ret;
+        }
+
+        async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
+        {
+            var buf = new byte[4096];
+            var read = 0;
+
+            do {
+                read = await source.ReadAsync(buf, 0, 4096).ConfigureAwait(false);
+                if (read > 0) target.Write(buf, 0, read);
+            } while (!ct.IsCancellationRequested && read > 0);
+
+            if (ct.IsCancellationRequested) {
+                throw new OperationCanceledException();
+            }
         }
     }
 
