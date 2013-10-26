@@ -37,13 +37,15 @@ namespace ModernHttpClient
                 rq.OutputStream.Close();
             }
 
-            var body = new MemoryStream();
-
             return await Task.Run (() => {
                 if (cancellationToken.IsCancellationRequested) {
                     throw new TaskCanceledException();
                 }
 
+                // XXX: Because of Xamarin's implementation of HttpClient, the 
+                // CancellationToken passed above gets Disposed as soon as this
+                // method returns. This means that this cancelationToken is most
+                // likely ineffective. 
                 return new HttpResponseMessage ((HttpStatusCode)rq.ResponseCode) {
                     Content = new StreamContent (new ConcatenatingStream(new[] {
                         rq.InputStream,
@@ -138,7 +140,6 @@ namespace ModernHttpClient
         {
             int result = 0;
             while (count > 0) {
-                Console.WriteLine("Running Read, Cancelled: {0}, Token: {0:x8}", ct.IsCancellationRequested, ct.GetHashCode());
                 if (ct.IsCancellationRequested) {
                     EndOfStream();
                     throw new OperationCanceledException ();
