@@ -17,7 +17,7 @@ namespace Playground.iOS
 
         CancellationTokenSource currentToken;
 
-        partial void cancel (MonoTouch.Foundation.NSObject sender)
+        partial void cancelIt (MonoTouch.Foundation.NSObject sender)
         {
             this.currentToken.Cancel();
         }

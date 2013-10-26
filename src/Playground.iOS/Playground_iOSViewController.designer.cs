@@ -16,7 +16,7 @@ namespace Playground.iOS
 		MonoTouch.UIKit.UITextView result { get; set; }
 
         [Action ("cancelIt:")]
-		partial void cancel (MonoTouch.Foundation.NSObject sender);
+        partial void cancelIt (MonoTouch.Foundation.NSObject sender);
 
 		[Action ("doIt:")]
 		partial void doIt (MonoTouch.Foundation.NSObject sender);

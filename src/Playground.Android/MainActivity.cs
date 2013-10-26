@@ -36,7 +36,7 @@ namespace Playground.Android
                 Console.WriteLine("Canceled token {0:x8}", this.currentToken.Token.GetHashCode());
                 this.currentToken.Cancel();
             };
-            
+
             button.Click += async (o, e) => {
                 var client = new HttpClient(new OkHttpNetworkHandler());
                 currentToken = new CancellationTokenSource();

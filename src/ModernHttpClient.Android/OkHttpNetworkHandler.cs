@@ -46,8 +46,8 @@ namespace ModernHttpClient
                 // CancellationToken passed above gets Disposed as soon as this
                 // method returns. This means that this cancelationToken is most
                 // likely ineffective. 
-                return new HttpResponseMessage ((HttpStatusCode)rq.ResponseCode) {
-                    Content = new StreamContent (new ConcatenatingStream(new[] {
+                return new HttpResponseMessage((HttpStatusCode)rq.ResponseCode) {
+                    Content = new StreamContent(new ConcatenatingStream(new[] {
                         rq.InputStream,
                         rq.ErrorStream ?? new MemoryStream (),
                     }, true, cancellationToken)),
