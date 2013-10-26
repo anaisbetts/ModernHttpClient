@@ -45,7 +45,7 @@ namespace ModernHttpClient
             try {
                 // NB: Apparently my trick only works sometimes. Android will 
                 // make us suffer if we try to run anything on the UI thread
-                await Task.Run(async () => await copyToAsync(rq.InputStream, body, cancellationToken));
+                await Task.Run(async () => await copyToAsync(rq.InputStream, body, cancellationToken)).ConfigureAwait(false);
             } catch (Exception ex) {
                 reason = ex.Message;
             } finally {
