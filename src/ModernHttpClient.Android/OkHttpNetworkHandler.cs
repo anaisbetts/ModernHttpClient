@@ -26,12 +26,15 @@ namespace ModernHttpClient
             var rq = client.Open(new Java.Net.URL(request.RequestUri.ToString()));
             rq.RequestMethod = request.Method.Method.ToUpperInvariant();
 
+            // NB: This is a trick to get us off the UI thread
+            await Task.Run(() => {}).ConfigureAwait(false);
+
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
 
             if (request.Content != null) {
                 foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
 
-                var contentStream = await request.Content.ReadAsStreamAsync();
+                var contentStream = await request.Content.ReadAsStreamAsync().ConfigureAwait(false);
                 await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
                 rq.OutputStream.Close();
             }
@@ -40,14 +43,16 @@ namespace ModernHttpClient
             var reason = default(string);
 
             try {
-                await copyToAsync(rq.InputStream, body, cancellationToken);
+                // NB: Apparently my trick only works sometimes. Android will 
+                // make us suffer if we try to run anything on the UI thread
+                await Task.Run(async () => await copyToAsync(rq.InputStream, body, cancellationToken));
             } catch (Exception ex) {
                 reason = ex.Message;
             } finally {
                 rq.InputStream.Close();
             }
 
-            if (reason != null) {
+            if (reason != null && rq.ErrorStream != null) {
                 try {
                     await rq.ErrorStream.CopyToAsync (body).ConfigureAwait (false);
                 } finally {
