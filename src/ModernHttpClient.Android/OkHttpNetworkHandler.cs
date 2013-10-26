@@ -43,10 +43,16 @@ namespace ModernHttpClient
                 await copyToAsync(rq.InputStream, body, cancellationToken);
             } catch (Exception ex) {
                 reason = ex.Message;
+            } finally {
+                rq.InputStream.Close();
             }
 
             if (reason != null) {
-                await rq.ErrorStream.CopyToAsync(body).ConfigureAwait(false);
+                try {
+                    await rq.ErrorStream.CopyToAsync (body).ConfigureAwait (false);
+                } finally {
+                    rq.ErrorStream.Close();
+                }
             }
 
             var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode) {
