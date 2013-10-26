@@ -5,6 +5,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.iOS", "src
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.Android", "src\ModernHttpClient.Android\ModernHttpClient.Android.csproj", "{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playground.Android", "src\Playground.Android\Playground.Android.csproj", "{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -33,6 +35,22 @@ Global
 		{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}.Release|iPhone.Build.0 = Release|Any CPU
 		{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
 		{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Ad-Hoc|iPhone.ActiveCfg = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Ad-Hoc|iPhone.Build.0 = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.AppStore|iPhone.ActiveCfg = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.AppStore|iPhone.Build.0 = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Debug|iPhone.ActiveCfg = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Debug|iPhone.Build.0 = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Debug|iPhoneSimulator.ActiveCfg = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Debug|iPhoneSimulator.Build.0 = Debug|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Release|Any CPU.Build.0 = Release|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Release|iPhone.ActiveCfg = Release|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Release|iPhone.Build.0 = Release|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Release|iPhoneSimulator.ActiveCfg = Release|Any CPU
+		{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 		{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}.Ad-Hoc|iPhone.ActiveCfg = Debug|Any CPU
 		{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}.Ad-Hoc|iPhone.Build.0 = Debug|Any CPU
 		{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}.AppStore|iPhone.ActiveCfg = Debug|Any CPU
@@ -51,7 +69,7 @@ Global
 		{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}.Release|iPhoneSimulator.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(MonoDevelopProperties) = preSolution
-		StartupItem = src\ModernHttpClient.iOS\ModernHttpClient.iOS.csproj
+		StartupItem = src\Playground.Android\Playground.Android.csproj
 		Policies = $0
 		$0.DotNetNamingPolicy = $1
 		$1.DirectoryNamespaceAssociation = PrefixedHierarchical
@@ -62,7 +80,6 @@ Global
 		$2.inheritsScope = text/plain
 		$2.scope = text/x-csharp
 		$0.CSharpFormattingPolicy = $3
-		$3.ElseIfNewLinePlacement = SameLine
 		$3.AfterDelegateDeclarationParameterComma = True
 		$3.inheritsSet = Mono
 		$3.inheritsScope = text/x-csharp
