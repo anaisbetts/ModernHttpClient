@@ -26,89 +26,165 @@ namespace ModernHttpClient
             var rq = client.Open(new Java.Net.URL(request.RequestUri.ToString()));
             rq.RequestMethod = request.Method.Method.ToUpperInvariant();
 
-            // NB: This is a trick to get us off the UI thread
-            await Task.Run(() => {}).ConfigureAwait(false);
-
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
 
             if (request.Content != null) {
                 foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
 
-                var contentStream = await request.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                var contentStream = await Task.Run(async () => await request.Content.ReadAsStreamAsync()).ConfigureAwait(false);
                 await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
+
                 rq.OutputStream.Close();
             }
 
             var body = new MemoryStream();
-            var reason = default(string);
 
-            try {
-                // NB: Apparently my trick only works sometimes. Android will 
-                // make us suffer if we try to run anything on the UI thread
-                await Task.Run(async () => await copyToAsync(rq.InputStream, body, cancellationToken)).ConfigureAwait(false);
-            } catch (Exception ex) {
-                reason = ex.Message;
-            } finally {
-                rq.InputStream.Close();
-            }
-
-            if (reason != null && rq.ErrorStream != null) {
-                try {
-                    await rq.ErrorStream.CopyToAsync (body).ConfigureAwait (false);
-                } finally {
-                    rq.ErrorStream.Close();
+            return await Task.Run (() => {
+                if (cancellationToken.IsCancellationRequested) {
+                    throw new TaskCanceledException();
                 }
-            }
 
-            var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode) {
-                Content = new ByteArrayHttpContent(body.ToArray()),
-                RequestMessage = request,
-                ReasonPhrase = reason,
-            };
-
-            if (rq.HeaderFields.Count > 0) {
-                foreach(var k in rq.HeaderFields.Keys) {
-                    if (k == null) break;
-                    ret.Headers.TryAddWithoutValidation(k, rq.HeaderFields[k].FirstOrDefault());
-                }
-            }
-
-            return ret;
+                return new HttpResponseMessage ((HttpStatusCode)rq.ResponseCode) {
+                    Content = new StreamContent (new ConcatenatingStream(new[] {
+                        rq.InputStream,
+                        rq.ErrorStream ?? new MemoryStream (),
+                    }, true, cancellationToken)),
+                    RequestMessage = request,
+                };
+            });
         }
 
         async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
         {
-            var buf = new byte[4096];
-            var read = 0;
+            await Task.Run(async () => {
+                var buf = new byte[4096];
+                var read = 0;
 
-            do {
-                read = await source.ReadAsync(buf, 0, 4096).ConfigureAwait(false);
-                if (read > 0) target.Write(buf, 0, read);
-            } while (!ct.IsCancellationRequested && read > 0);
+                do {
+                    read = await source.ReadAsync(buf, 0, 4096).ConfigureAwait(false);
 
-            if (ct.IsCancellationRequested) {
-                throw new OperationCanceledException();
-            }
+                    if (read > 0) {
+                        target.Write(buf, 0, read);
+                    }
+                } while (!ct.IsCancellationRequested && read > 0);
+
+                if (ct.IsCancellationRequested) {
+                    throw new OperationCanceledException();
+                }
+            });
         }
     }
 
-    class ByteArrayHttpContent : HttpContent
+    // This is a hacked up version of http://stackoverflow.com/a/3879246/5728
+    class ConcatenatingStream : Stream
     {
-        byte[] data;
-        public ByteArrayHttpContent(byte[] data)
-        {
-            this.data = data;
+        CancellationToken ct;
+        long position;
+        bool closeStreams;
+        int isEnding = 0;
+
+        IEnumerator<Stream> iterator;
+        Stream current;
+       
+        Stream Current {
+            get {
+                if (current != null) return current;
+                if (iterator == null) throw new ObjectDisposedException(GetType().Name);
+
+                if (iterator.MoveNext()) {
+                    current = iterator.Current;
+                }
+
+                return current;
+            }
         }
 
-        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
+        public ConcatenatingStream(IEnumerable<Stream> source, bool closeStreams, CancellationToken ct)
         {
-            await (new MemoryStream(data)).CopyToAsync(stream);
+            if (source == null) throw new ArgumentNullException("source");
+
+            iterator = source.GetEnumerator();
+
+            this.ct = ct;
+            ct.Register (() => {
+                // NB: This registration seems to not fire often, so we need
+                // to also check it in Read().
+                EndOfStream();
+            });
+
+            this.closeStreams = closeStreams;
         }
 
-        protected override bool TryComputeLength(out long length)
+        public override bool CanRead { get { return true; } }
+        public override bool CanWrite { get { return false; } }
+        public override void Write(byte[] buffer, int offset, int count) { throw new NotSupportedException(); }
+        public override void WriteByte(byte value) { throw new NotSupportedException(); }
+        public override bool CanSeek { get { return false; } }
+        public override bool CanTimeout { get { return false; } }
+        public override void SetLength(long value) { throw new NotSupportedException(); }
+        public override long Seek(long offset, SeekOrigin origin) { throw new NotSupportedException(); }
+
+        public override void Flush() { }
+        public override long Length {
+            get { throw new NotSupportedException(); }
+        }
+
+        public override long Position {
+            get { return position; }
+            set { if (value != this.position) throw new NotSupportedException(); }
+        }
+
+        public override int Read(byte[] buffer, int offset, int count)
         {
-            length = data.Length;
-            return true;
+            int result = 0;
+            while (count > 0) {
+                Console.WriteLine("Running Read, Cancelled: {0}, Token: {0:x8}", ct.IsCancellationRequested, ct.GetHashCode());
+                if (ct.IsCancellationRequested) {
+                    EndOfStream();
+                    throw new OperationCanceledException ();
+                }
+
+                Stream stream = Current;
+                if (stream == null) break;
+                int thisCount = stream.Read(buffer, offset, count);
+
+                result += thisCount;
+                count -= thisCount;
+                offset += thisCount;
+                if (thisCount == 0) EndOfStream();
+            }
+
+            position += result;
+            return result;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            if (disposing) {
+                EndOfStream();
+                iterator.Dispose();
+                iterator = null;
+                current = null;
+            }
+
+            base.Dispose(disposing);
+        }
+
+        void EndOfStream() 
+        {
+            if (Interlocked.CompareExchange(ref isEnding, 1, 0) == 1) {
+                // Someone else is already Ending
+                return;
+            }
+
+            if (closeStreams && current != null) {
+                current.Close();
+                current.Dispose();
+
+                while (iterator.MoveNext ()) { iterator.Current.Dispose (); }
+            }
+
+            current = null;
         }
     }
 }
