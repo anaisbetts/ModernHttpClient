@@ -48,8 +48,8 @@ namespace ModernHttpClient
                 // likely ineffective. 
                 return new HttpResponseMessage((HttpStatusCode)rq.ResponseCode) {
                     Content = new StreamContent(new ConcatenatingStream(new[] {
-                        rq.InputStream,
-                        rq.ErrorStream ?? new MemoryStream (),
+                        () => rq.InputStream,
+                        () => rq.ErrorStream ?? new MemoryStream (),
                     }, true, cancellationToken)),
                     RequestMessage = request,
                 };
@@ -84,6 +84,7 @@ namespace ModernHttpClient
         long position;
         bool closeStreams;
         int isEnding = 0;
+        Task blockUntil;
 
         IEnumerator<Stream> iterator;
         Stream current;
@@ -101,11 +102,11 @@ namespace ModernHttpClient
             }
         }
 
-        public ConcatenatingStream(IEnumerable<Stream> source, bool closeStreams, CancellationToken ct)
+        public ConcatenatingStream(IEnumerable<Func<Stream>> source, bool closeStreams, CancellationToken ct, Task blockUntil = null)
         {
             if (source == null) throw new ArgumentNullException("source");
 
-            iterator = source.GetEnumerator();
+            iterator = source.Select(x => x()).GetEnumerator();
 
             this.ct = ct;
             ct.Register (() => {
@@ -115,6 +116,7 @@ namespace ModernHttpClient
             });
 
             this.closeStreams = closeStreams;
+            this.blockUntil = blockUntil;
         }
 
         public override bool CanRead { get { return true; } }
@@ -139,6 +141,11 @@ namespace ModernHttpClient
         public override int Read(byte[] buffer, int offset, int count)
         {
             int result = 0;
+
+            if (blockUntil != null) {
+                blockUntil.Wait(ct);
+            }
+
             while (count > 0) {
                 if (ct.IsCancellationRequested) {
                     EndOfStream();
