@@ -55,6 +55,10 @@ namespace ModernHttpClient
                         err = (NSError)ex.Data["err"];
                     }
 
+                    if (retBox[0] == null) {
+                        throw ex;
+                    }
+
                     retBox[0].ReasonPhrase = (err != null ? err.LocalizedDescription : null);
                 });
             } catch (ApplicationException ex) {
@@ -73,11 +77,11 @@ namespace ModernHttpClient
                 throw new TaskCanceledException();
             }
 
-            var respData = op.ResponseData;
             var httpContent = new StreamContent (
                 new ConcatenatingStream(new Func<Stream>[] { 
-                    () => new MemoryStream(), 
-                    () => respData == null || op.ResponseData.Length == 0 ? Stream.Null : op.ResponseData.AsStream() 
+                    () => {
+                        return op.ResponseData == null || op.ResponseData.Length == 0 ? Stream.Null : op.ResponseData.AsStream();
+                    }
                 },
                 true,
                 cancellationToken,
@@ -185,7 +189,7 @@ namespace ModernHttpClient
             ct.Register (() => {
                 // NB: This registration seems to not fire often, so we need
                 // to also check it in Read().
-                EndOfStream();
+                Dispose();
             });
 
             this.closeStreams = closeStreams;
@@ -224,7 +228,7 @@ namespace ModernHttpClient
 
             while (count > 0) {
                 if (ct.IsCancellationRequested) {
-                    EndOfStream();
+                    Dispose();
                     throw new OperationCanceledException ();
                 }
 
@@ -244,8 +248,15 @@ namespace ModernHttpClient
 
         protected override void Dispose(bool disposing)
         {
+            if (Interlocked.CompareExchange(ref isEnding, 1, 0) == 1) {
+                return;
+            }
+
             if (disposing) {
-                EndOfStream();
+                while (Current != null) {
+                    EndOfStream();
+                }
+
                 iterator.Dispose();
                 iterator = null;
                 current = null;
@@ -256,16 +267,9 @@ namespace ModernHttpClient
 
         void EndOfStream() 
         {
-            if (Interlocked.CompareExchange(ref isEnding, 1, 0) == 1) {
-                // Someone else is already Ending
-                return;
-            }
-
             if (closeStreams && current != null) {
                 current.Close();
                 current.Dispose();
-
-                while (iterator.MoveNext ()) { iterator.Current.Dispose (); }
             }
 
             current = null;

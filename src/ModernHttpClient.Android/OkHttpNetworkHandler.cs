@@ -77,6 +77,7 @@ namespace ModernHttpClient
         }
     }
 
+
     // This is a hacked up version of http://stackoverflow.com/a/3879246/5728
     class ConcatenatingStream : Stream
     {
@@ -88,7 +89,7 @@ namespace ModernHttpClient
 
         IEnumerator<Stream> iterator;
         Stream current;
-       
+
         Stream Current {
             get {
                 if (current != null) return current;
@@ -112,7 +113,7 @@ namespace ModernHttpClient
             ct.Register (() => {
                 // NB: This registration seems to not fire often, so we need
                 // to also check it in Read().
-                EndOfStream();
+                Dispose();
             });
 
             this.closeStreams = closeStreams;
@@ -143,12 +144,15 @@ namespace ModernHttpClient
             int result = 0;
 
             if (blockUntil != null) {
-                blockUntil.Wait(ct);
+                // XXX: Because of https://github.com/mono/mono/pull/792, we can't
+                // actually use the CancellationToken here.
+                //blockUntil.Wait(ct);
+                blockUntil.Wait();
             }
 
             while (count > 0) {
                 if (ct.IsCancellationRequested) {
-                    EndOfStream();
+                    Dispose();
                     throw new OperationCanceledException ();
                 }
 
@@ -168,8 +172,15 @@ namespace ModernHttpClient
 
         protected override void Dispose(bool disposing)
         {
+            if (Interlocked.CompareExchange(ref isEnding, 1, 0) == 1) {
+                return;
+            }
+
             if (disposing) {
-                EndOfStream();
+                while (Current != null) {
+                    EndOfStream();
+                }
+
                 iterator.Dispose();
                 iterator = null;
                 current = null;
@@ -180,16 +191,9 @@ namespace ModernHttpClient
 
         void EndOfStream() 
         {
-            if (Interlocked.CompareExchange(ref isEnding, 1, 0) == 1) {
-                // Someone else is already Ending
-                return;
-            }
-
             if (closeStreams && current != null) {
                 current.Close();
                 current.Dispose();
-
-                while (iterator.MoveNext ()) { iterator.Current.Dispose (); }
             }
 
             current = null;
