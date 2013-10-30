@@ -9,8 +9,11 @@ vendor: ../vendor
 
 ../vendor:
 	$(MAKE) -w -C .. vendor 
-	patch -d ../vendor/okhttp/vendor/okhttp -p1 < okhttp-jdk6-fix-for-tests.patch
-	patch -d ../vendor/okhttp -p1 < fix-android-targets.patch
+	$(MAKE) -w -C . patch
+
+patch:
+	patch -N -d ../vendor/okhttp/vendor/okhttp -p1 < okhttp-jdk6-fix-for-tests.patch
+	patch -N -d ../vendor/okhttp -p1 < fix-android-targets.patch
 
 clean:
 	$(MAKE) -w -C .. clean
@@ -22,7 +25,7 @@ clean:
 
 # Component vars and targets
 
-.PHONY: all xam component install uninstall clean vendor
+.PHONY: all xam component install uninstall clean vendor patch
 
 # Path to xamarin-component.exe (get it from https://components.xamarin.com/guidelines)
 XAMARIN_COMPONENT ?= ./xamarin-component.exe
