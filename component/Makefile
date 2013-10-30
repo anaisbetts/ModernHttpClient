@@ -5,14 +5,12 @@ MDTOOL ?= /Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool
 all: vendor
 	$(MAKE) -w -C ..
 
-vendor:
-	$(MAKE) -w -C .. vendor
-	(cd ../vendor/okhttp/vendor/okhttp; \
-	 patch -p1 < ../../../../component/okhttp-jdk6-fix-for-tests.patch; \
-	)
-	(cd ../vendor/okhttp; \
-	 patch -p1 < ../../component/fix-android-targets.patch; \
-	)
+vendor: ../vendor
+
+../vendor:
+	$(MAKE) -w -C .. vendor 
+	patch -d ../vendor/okhttp/vendor/okhttp -p1 < okhttp-jdk6-fix-for-tests.patch
+	patch -d ../vendor/okhttp -p1 < fix-android-targets.patch
 
 clean:
 	$(MAKE) -w -C .. clean
