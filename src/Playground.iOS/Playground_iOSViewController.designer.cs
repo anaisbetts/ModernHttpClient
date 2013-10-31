@@ -13,10 +13,13 @@ namespace Playground.iOS
 	partial class Playground_iOSViewController
 	{
 		[Outlet]
+		MonoTouch.UIKit.UILabel md5sum { get; set; }
+
+		[Outlet]
 		MonoTouch.UIKit.UITextView result { get; set; }
 
-        [Action ("cancelIt:")]
-        partial void cancelIt (MonoTouch.Foundation.NSObject sender);
+		[Action ("cancelIt:")]
+		partial void cancelIt (MonoTouch.Foundation.NSObject sender);
 
 		[Action ("doIt:")]
 		partial void doIt (MonoTouch.Foundation.NSObject sender);
@@ -26,6 +29,11 @@ namespace Playground.iOS
 			if (result != null) {
 				result.Dispose ();
 				result = null;
+			}
+
+			if (md5sum != null) {
+				md5sum.Dispose ();
+				md5sum = null;
 			}
 		}
 	}
