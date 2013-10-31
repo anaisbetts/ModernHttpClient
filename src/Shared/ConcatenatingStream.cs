@@ -11,6 +11,7 @@ namespace ModernHttpClient
     class ConcatenatingStream : Stream
     {
         readonly CancellationTokenSource cts = new CancellationTokenSource();
+        readonly Action onDispose;
 
         long position;
         bool closeStreams;
@@ -33,7 +34,7 @@ namespace ModernHttpClient
             }
         }
 
-        public ConcatenatingStream(IEnumerable<Func<Stream>> source, bool closeStreams, Task blockUntil = null)
+        public ConcatenatingStream(IEnumerable<Func<Stream>> source, bool closeStreams, Task blockUntil = null, Action onDispose = null)
         {
             if (source == null) throw new ArgumentNullException("source");
 
@@ -41,6 +42,7 @@ namespace ModernHttpClient
 
             this.closeStreams = closeStreams;
             this.blockUntil = blockUntil;
+            this.onDispose = onDispose;
         }
 
         public override bool CanRead { get { return true; } }
@@ -145,6 +147,7 @@ namespace ModernHttpClient
 
             if (disposing) {
                 cts.Cancel();
+
                 while (Current != null) {
                     EndOfStream();
                 }
@@ -152,6 +155,8 @@ namespace ModernHttpClient
                 iterator.Dispose();
                 iterator = null;
                 current = null;
+
+                if (onDispose != null) onDispose();
             }
 
             base.Dispose(disposing);
