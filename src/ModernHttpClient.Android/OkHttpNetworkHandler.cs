@@ -25,66 +25,60 @@ namespace ModernHttpClient
         {
             var rq = client.Open(new Java.Net.URL(request.RequestUri.ToString()));
             rq.RequestMethod = request.Method.Method.ToUpperInvariant();
-            //cancellationToken.Register(() => client.Cancel(rq));
 
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
 
             if (request.Content != null) {
                 foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
 
-                await request.Content.CopyToAsync(rq.OutputStream).ConfigureAwait(false);
+                var contentStream = await Task.Run(async () => await request.Content.ReadAsStreamAsync()).ConfigureAwait(false);
+                await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
+
                 rq.OutputStream.Close();
             }
 
-            var body = new MemoryStream();
-            var reason = default(string);
-
-            try {
-                await Task.Run(() => {
-                    rq.InputStream.CopyTo(body);
-                }).ConfigureAwait(false);
-            } catch (Exception ex) {
-                reason = ex.Message;
-            }
-
-            if (reason != null) {
-                await rq.ErrorStream.CopyToAsync(body).ConfigureAwait(false);
-            }
-
-            var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode) {
-                Content = new ByteArrayHttpContent(body.ToArray()),
-                RequestMessage = request,
-                ReasonPhrase = reason,
-            };
-
-            if (rq.HeaderFields.Count > 0) {
-                foreach(var k in rq.HeaderFields.Keys) {
-                    if (k == null) break;
-                    ret.Headers.TryAddWithoutValidation(k, rq.HeaderFields[k].FirstOrDefault());
+            return await Task.Run (() => {
+                if (cancellationToken.IsCancellationRequested) {
+                    throw new TaskCanceledException();
                 }
-            }
 
-            return ret;
+                // NB: This is the line that blocks until we have headers
+                var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
+
+                if (cancellationToken.IsCancellationRequested) {
+                    throw new TaskCanceledException();
+                }
+
+                ret.Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
+                    () => rq.InputStream,
+                    () => rq.ErrorStream ?? new MemoryStream (),
+                }, true));
+
+                cancellationToken.Register (ret.Content.Dispose);
+
+                ret.RequestMessage = request;
+                return ret;
+            });
         }
-    }
 
-    class ByteArrayHttpContent : HttpContent
-    {
-        byte[] data;
-        public ByteArrayHttpContent(byte[] data)
+        async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
         {
-            this.data = data;
-        }
+            await Task.Run(async () => {
+                var buf = new byte[4096];
+                var read = 0;
 
-        protected override async Task SerializeToStreamAsync(Stream stream, TransportContext context)
-        {
-            await (new MemoryStream(data)).CopyToAsync(stream);
-        }
+                do {
+                    read = await source.ReadAsync(buf, 0, 4096).ConfigureAwait(false);
 
-        protected override bool TryComputeLength(out long length)
-        {
-            length = data.Length;
-            return true;
+                    if (read > 0) {
+                        target.Write(buf, 0, read);
+                    }
+                } while (!ct.IsCancellationRequested && read > 0);
+
+                if (ct.IsCancellationRequested) {
+                    throw new OperationCanceledException();
+                }
+            });
         }
     }
 }
