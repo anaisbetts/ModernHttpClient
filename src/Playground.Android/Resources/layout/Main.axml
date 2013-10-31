@@ -20,4 +20,10 @@
         android:layout_height="wrap_content"
         android:id="@+id/result"
         android:layout_marginTop="8dp" />
+    <TextView
+        android:text="MD5 sum"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/md5sum" />
 </LinearLayout>

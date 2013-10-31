@@ -10,6 +10,8 @@ using ModernHttpClient;
 using System.Threading;
 using System.Diagnostics;
 using System.Threading.Tasks;
+using System.Security.Cryptography;
+using System.Text;
 
 namespace Playground.Android
 {
@@ -31,6 +33,7 @@ namespace Playground.Android
             var button = FindViewById<Button>(Resource.Id.doIt);
             var cancel = FindViewById<Button>(Resource.Id.cancelButton);
             var result = FindViewById<TextView>(Resource.Id.result);
+            var hashView = FindViewById<TextView>(Resource.Id.md5sum);
 
             var resp = default(HttpResponseMessage);
 
@@ -47,11 +50,17 @@ namespace Playground.Android
 
                 st.Start();
                 try {
-                    resp = await client.GetAsync("https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip", HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
+                    var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
+                    //var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip"; 
+                    resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                     result.Text = "Got the headers!";
 
                     var bytes = await resp.Content.ReadAsByteArrayAsync();
                     result.Text = String.Format("Read {0} bytes", bytes.Length);
+
+                    var md5 = MD5.Create();
+                    var hash = md5.ComputeHash(bytes);
+                    hashView.Text = ToHex(hash, false);
                 } catch (Exception ex) {
                     result.Text = ex.ToString();
                 } finally {
@@ -59,6 +68,16 @@ namespace Playground.Android
                     result.Text = (result.Text ?? "") + String.Format("\n\nTook {0} milliseconds", st.ElapsedMilliseconds);
                 }
             };
+        }
+
+        public static string ToHex(byte[] bytes, bool upperCase)
+        {
+            var result = new StringBuilder(bytes.Length*2);
+
+            for (int i = 0; i < bytes.Length; i++)
+                result.Append(bytes[i].ToString(upperCase ? "X2" : "x2"));
+
+            return result.ToString();
         }
     }
 }
