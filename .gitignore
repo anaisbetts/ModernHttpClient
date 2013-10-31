@@ -2,7 +2,7 @@
 AFNetworking.userprefs
 bin/
 obj/
-
+build/
 *.userprefs
 build/
 *.xam

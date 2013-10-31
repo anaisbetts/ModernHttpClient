@@ -5,8 +5,10 @@ MDTOOL ?= /Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool
 all: vendor
 	$(MAKE) -w -C ..
 
-vendor:
-	$(MAKE) -w -C .. vendor
+vendor: ../vendor
+
+../vendor:
+	$(MAKE) -w -C .. vendor 
 
 clean:
 	$(MAKE) -w -C .. clean
@@ -18,10 +20,11 @@ clean:
 
 # Component vars and targets
 
-.PHONY: all xam component install uninstall clean vendor
+.PHONY: all xam component install uninstall clean vendor patch
 
 # Path to xamarin-component.exe (get it from https://components.xamarin.com/guidelines)
 XAMARIN_COMPONENT ?= ./xamarin-component.exe
+
 # Path to mono, which by default should be on your PATH.
 MONO ?= mono
 

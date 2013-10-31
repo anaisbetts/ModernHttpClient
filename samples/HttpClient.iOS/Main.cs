@@ -85,6 +85,7 @@ namespace HttpClient
 
 			InvokeOnMainThread (delegate {
 				var view = new UIViewController ();
+				view.View.BackgroundColor = UIColor.White;
 				var label = new UILabel (new RectangleF (20, 60, 300, 80)){
 					Text = "The HTML returned by the server:"
 				};
