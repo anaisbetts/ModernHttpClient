@@ -69,7 +69,7 @@ namespace ModernHttpClient
 
             var resp = (NSHttpUrlResponse)op.Response;
 
-            if (err != null && resp == null && err.Domain == NSError.NSUrlErrorDomain && err.Code == -1009) {
+            if (err != null && resp == null && err.Domain == NSError.NSUrlErrorDomain) {
                 throw new WebException (err.LocalizedDescription, WebExceptionStatus.NameResolutionFailure);
             }
 
