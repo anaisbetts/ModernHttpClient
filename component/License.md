@@ -1,4 +1,7 @@
-The ModernHttpClient component includes three libraries: AFNetworking for iOS which is under the MIT license, OkHttp for Android which is under the Apache license version 2.0, and the ModernHttpClient wrapper itself which is under the MIT license.
+The ModernHttpClient component includes three libraries: AFNetworking for iOS
+which is under the MIT license, OkHttp for Android which is under the Apache
+license version 2.0, and the ModernHttpClient wrapper itself which is under
+the MIT license.
 
 AFNetworking License
 ====================
