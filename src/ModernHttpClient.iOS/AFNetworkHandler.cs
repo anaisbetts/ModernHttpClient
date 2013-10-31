@@ -48,18 +48,19 @@ namespace ModernHttpClient
             lock (pins) { pins[rq] = new object[] { op, handler, }; }
 
             var blockingTcs = new TaskCompletionSource<bool>();
-            var retBox = new HttpResponseMessage[1];
+            var ret= default(HttpResponseMessage);
+
             try {
                 op = await enqueueOperation(handler, new AFHTTPRequestOperation(rq), cancellationToken, () => blockingTcs.SetResult(true), ex => {
                     if (ex is ApplicationException) {
                         err = (NSError)ex.Data["err"];
                     }
 
-                    if (retBox[0] == null) {
-                        throw ex;
+                    if (ret == null) {
+                        return;
                     }
 
-                    retBox[0].ReasonPhrase = (err != null ? err.LocalizedDescription : null);
+                    ret.ReasonPhrase = (err != null ? err.LocalizedDescription : null);
                 });
             } catch (ApplicationException ex) {
                 op = (AFHTTPRequestOperation)ex.Data["op"];
@@ -83,13 +84,11 @@ namespace ModernHttpClient
                 },
                 true, blockingTcs.Task));
 
-            var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
+            ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
                 Content = httpContent,
                 RequestMessage = request,
                 ReasonPhrase = (err != null ? err.LocalizedDescription : null),
             };
-
-            retBox[0] = ret;
 
             foreach(var v in resp.AllHeaderFields) {
                 ret.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
