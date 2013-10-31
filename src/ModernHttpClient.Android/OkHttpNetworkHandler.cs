@@ -42,13 +42,22 @@ namespace ModernHttpClient
                     throw new TaskCanceledException();
                 }
 
-                return new HttpResponseMessage((HttpStatusCode)rq.ResponseCode) {
-                    Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
-                        () => rq.InputStream,
-                        () => rq.ErrorStream ?? new MemoryStream (),
-                    }, true)),
-                    RequestMessage = request,
-                };
+                // NB: This is the line that blocks until we have headers
+                var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
+
+                if (cancellationToken.IsCancellationRequested) {
+                    throw new TaskCanceledException();
+                }
+
+                ret.Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
+                    () => rq.InputStream,
+                    () => rq.ErrorStream ?? new MemoryStream (),
+                }, true));
+
+                cancellationToken.Register (ret.Content.Dispose);
+
+                ret.RequestMessage = request;
+                return ret;
             });
         }
 
@@ -128,9 +137,43 @@ namespace ModernHttpClient
             set { if (value != this.position) throw new NotSupportedException(); }
         }
 
-        public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        public override async Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
-            return Task.Run(() => readInternal(buffer, offset, count, cancellationToken), cancellationToken);
+            int result = 0;
+
+            if (blockUntil != null) {
+                await blockUntil.ContinueWith(_ => {}, cancellationToken);
+            }
+
+            while (count > 0) {
+                if (cancellationToken.IsCancellationRequested) {
+                    throw new OperationCanceledException();
+                }
+
+                if (cts.IsCancellationRequested) {
+                    throw new OperationCanceledException();
+                }
+
+                Stream stream = Current;
+                if (stream == null) break;
+                int thisCount = await stream.ReadAsync(buffer, offset, count);
+
+                result += thisCount;
+                count -= thisCount;
+                offset += thisCount;
+                if (thisCount == 0) EndOfStream();
+            }
+                            
+            if (cancellationToken.IsCancellationRequested) {
+                throw new OperationCanceledException();
+            }
+                            
+            if (cts.IsCancellationRequested) {
+                throw new OperationCanceledException();
+            }
+
+            position += result;
+            return result;
         }
 
         public override int Read (byte[] buffer, int offset, int count)
