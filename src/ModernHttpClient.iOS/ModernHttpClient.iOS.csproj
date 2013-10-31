@@ -56,5 +56,8 @@
     <Reference Include="AFNetworking">
       <HintPath>..\..\vendor\afnetworking\AFNetworking.dll</HintPath>
     </Reference>
+    <Compile Include="..\Shared\ConcatenatingStream.cs">
+      <Link>ConcatenatingStream.cs</Link>
+    </Compile>
   </ItemGroup>
 </Project>

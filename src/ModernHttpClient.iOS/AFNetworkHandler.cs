@@ -79,13 +79,9 @@ namespace ModernHttpClient
 
             var httpContent = new StreamContent (
                 new ConcatenatingStream(new Func<Stream>[] { 
-                    () => {
-                        return op.ResponseData == null || op.ResponseData.Length == 0 ? Stream.Null : op.ResponseData.AsStream();
-                    }
+                    () => op.ResponseData == null || op.ResponseData.Length == 0 ? Stream.Null : op.ResponseData.AsStream(),
                 },
-                true,
-                cancellationToken,
-                blockingTcs.Task));
+                true, blockingTcs.Task));
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
                 Content = httpContent,
@@ -151,128 +147,6 @@ namespace ModernHttpClient
             });
 
             return tcs.Task;
-        }
-    }
-
-    // This is a hacked up version of http://stackoverflow.com/a/3879246/5728
-    class ConcatenatingStream : Stream
-    {
-        CancellationToken ct;
-        long position;
-        bool closeStreams;
-        int isEnding = 0;
-        Task blockUntil;
-
-        IEnumerator<Stream> iterator;
-        Stream current;
-       
-        Stream Current {
-            get {
-                if (current != null) return current;
-                if (iterator == null) throw new ObjectDisposedException(GetType().Name);
-
-                if (iterator.MoveNext()) {
-                    current = iterator.Current;
-                }
-
-                return current;
-            }
-        }
-
-        public ConcatenatingStream(IEnumerable<Func<Stream>> source, bool closeStreams, CancellationToken ct, Task blockUntil = null)
-        {
-            if (source == null) throw new ArgumentNullException("source");
-
-            iterator = source.Select(x => x()).GetEnumerator();
-
-            this.ct = ct;
-            ct.Register (() => {
-                // NB: This registration seems to not fire often, so we need
-                // to also check it in Read().
-                Dispose();
-            });
-
-            this.closeStreams = closeStreams;
-            this.blockUntil = blockUntil;
-        }
-
-        public override bool CanRead { get { return true; } }
-        public override bool CanWrite { get { return false; } }
-        public override void Write(byte[] buffer, int offset, int count) { throw new NotSupportedException(); }
-        public override void WriteByte(byte value) { throw new NotSupportedException(); }
-        public override bool CanSeek { get { return false; } }
-        public override bool CanTimeout { get { return false; } }
-        public override void SetLength(long value) { throw new NotSupportedException(); }
-        public override long Seek(long offset, SeekOrigin origin) { throw new NotSupportedException(); }
-
-        public override void Flush() { }
-        public override long Length {
-            get { throw new NotSupportedException(); }
-        }
-
-        public override long Position {
-            get { return position; }
-            set { if (value != this.position) throw new NotSupportedException(); }
-        }
-
-        public override int Read(byte[] buffer, int offset, int count)
-        {
-            int result = 0;
-
-            if (blockUntil != null) {
-                // XXX: Because of https://github.com/mono/mono/pull/792, we can't
-                // actually use the CancellationToken here.
-                //blockUntil.Wait(ct);
-                blockUntil.Wait();
-            }
-
-            while (count > 0) {
-                if (ct.IsCancellationRequested) {
-                    Dispose();
-                    throw new OperationCanceledException ();
-                }
-
-                Stream stream = Current;
-                if (stream == null) break;
-                int thisCount = stream.Read(buffer, offset, count);
-
-                result += thisCount;
-                count -= thisCount;
-                offset += thisCount;
-                if (thisCount == 0) EndOfStream();
-            }
-
-            position += result;
-            return result;
-        }
-
-        protected override void Dispose(bool disposing)
-        {
-            if (Interlocked.CompareExchange(ref isEnding, 1, 0) == 1) {
-                return;
-            }
-
-            if (disposing) {
-                while (Current != null) {
-                    EndOfStream();
-                }
-
-                iterator.Dispose();
-                iterator = null;
-                current = null;
-            }
-
-            base.Dispose(disposing);
-        }
-
-        void EndOfStream() 
-        {
-            if (closeStreams && current != null) {
-                current.Close();
-                current.Dispose();
-            }
-
-            current = null;
         }
     }
 }
