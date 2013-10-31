@@ -32,9 +32,12 @@ namespace Playground.Android
             var cancel = FindViewById<Button>(Resource.Id.cancelButton);
             var result = FindViewById<TextView>(Resource.Id.result);
 
+            var resp = default(HttpResponseMessage);
+
             cancel.Click += (o, e) => {
                 Console.WriteLine("Canceled token {0:x8}", this.currentToken.Token.GetHashCode());
                 this.currentToken.Cancel();
+                if (resp != null) resp.Content.Dispose();
             };
 
             button.Click += async (o, e) => {
@@ -44,7 +47,7 @@ namespace Playground.Android
 
                 st.Start();
                 try {
-                    var resp = await client.GetAsync("https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip", HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
+                    resp = await client.GetAsync("https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip", HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                     result.Text = "Got the headers!";
 
                     var bytes = await resp.Content.ReadAsByteArrayAsync();

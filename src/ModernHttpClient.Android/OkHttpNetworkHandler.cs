@@ -42,15 +42,11 @@ namespace ModernHttpClient
                     throw new TaskCanceledException();
                 }
 
-                // XXX: Because of Xamarin's implementation of HttpClient, the 
-                // CancellationToken passed above gets Disposed as soon as this
-                // method returns. This means that this cancelationToken is most
-                // likely ineffective. 
                 return new HttpResponseMessage((HttpStatusCode)rq.ResponseCode) {
-                    Content = new StreamContent(new ConcatenatingStream(new[] {
+                    Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
                         () => rq.InputStream,
                         () => rq.ErrorStream ?? new MemoryStream (),
-                    }, true, cancellationToken)),
+                    }, true)),
                     RequestMessage = request,
                 };
             });
@@ -77,19 +73,19 @@ namespace ModernHttpClient
         }
     }
 
-
     // This is a hacked up version of http://stackoverflow.com/a/3879246/5728
     class ConcatenatingStream : Stream
     {
-        CancellationToken ct;
+        readonly CancellationTokenSource cts = new CancellationTokenSource();
+
         long position;
         bool closeStreams;
         int isEnding = 0;
         Task blockUntil;
 
         IEnumerator<Stream> iterator;
-        Stream current;
 
+        Stream current;
         Stream Current {
             get {
                 if (current != null) return current;
@@ -103,18 +99,11 @@ namespace ModernHttpClient
             }
         }
 
-        public ConcatenatingStream(IEnumerable<Func<Stream>> source, bool closeStreams, CancellationToken ct, Task blockUntil = null)
+        public ConcatenatingStream(IEnumerable<Func<Stream>> source, bool closeStreams, Task blockUntil = null)
         {
             if (source == null) throw new ArgumentNullException("source");
 
             iterator = source.Select(x => x()).GetEnumerator();
-
-            this.ct = ct;
-            ct.Register (() => {
-                // NB: This registration seems to not fire often, so we need
-                // to also check it in Read().
-                Dispose();
-            });
 
             this.closeStreams = closeStreams;
             this.blockUntil = blockUntil;
@@ -139,21 +128,31 @@ namespace ModernHttpClient
             set { if (value != this.position) throw new NotSupportedException(); }
         }
 
-        public override int Read(byte[] buffer, int offset, int count)
+        public override Task<int> ReadAsync (byte[] buffer, int offset, int count, CancellationToken cancellationToken)
+        {
+            return Task.Run(() => readInternal(buffer, offset, count, cancellationToken), cancellationToken);
+        }
+
+        public override int Read (byte[] buffer, int offset, int count)
+        {
+            return readInternal(buffer, offset, count);
+        }
+
+        int readInternal(byte[] buffer, int offset, int count, CancellationToken ct = default(CancellationToken))
         {
             int result = 0;
 
             if (blockUntil != null) {
-                // XXX: Because of https://github.com/mono/mono/pull/792, we can't
-                // actually use the CancellationToken here.
-                //blockUntil.Wait(ct);
-                blockUntil.Wait();
+                blockUntil.Wait(cts.Token);
             }
 
             while (count > 0) {
                 if (ct.IsCancellationRequested) {
-                    Dispose();
-                    throw new OperationCanceledException ();
+                    throw new OperationCanceledException();
+                }
+
+                if (cts.IsCancellationRequested) {
+                    throw new OperationCanceledException();
                 }
 
                 Stream stream = Current;
@@ -177,6 +176,7 @@ namespace ModernHttpClient
             }
 
             if (disposing) {
+                cts.Cancel();
                 while (Current != null) {
                     EndOfStream();
                 }
