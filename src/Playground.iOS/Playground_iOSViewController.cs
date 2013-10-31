@@ -34,7 +34,10 @@ namespace Playground.iOS
 
             st.Start();
             try {
-                resp = await client.GetAsync("https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip", HttpCompletionOption.ResponseContentRead, currentToken.Token);
+                var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
+                //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
+
+                resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                 result.Text = "Got the headers!";
 
                 var bytes = await resp.Content.ReadAsByteArrayAsync();
