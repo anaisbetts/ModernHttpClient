@@ -34,6 +34,7 @@
         <Command type="BeforeBuild" command="make OkHttp.dll" workingdir="${SolutionDir}" />
       </CustomCommands>
     </CustomCommands>
+    <EmbedAssembliesIntoApk>True</EmbedAssembliesIntoApk>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>

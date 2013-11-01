@@ -50,8 +50,8 @@ namespace Playground.Android
 
                 st.Start();
                 try {
-                    var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
-                    //var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip"; 
+                    //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
+                    var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip"; 
                     resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                     result.Text = "Got the headers!";
 
