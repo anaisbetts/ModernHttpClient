@@ -3,4 +3,5 @@
 	<uses-sdk android:minSdkVersion="8" />
 	<application android:label="HttpClient.Android">
 	</application>
+    <uses-permission android:name="android.permission.INTERNET" />
 </manifest>
