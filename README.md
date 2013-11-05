@@ -22,6 +22,35 @@ On Android:
 var httpClient = new HttpClient(new OkHttpNetworkHandler());
 ```
 
+## How can I use this in a PCL?
+
+Using ModernHttpClient from a PCL is fairly easy with some rigging, especially if you've got some sort of IoC/DI setup - request an HttpClient in your PCL, and register it in your app. However, here's what you can do without any external dependencies:
+
+```cs
+// In your PCL
+public static class HttpClientFactory 
+{
+    public static Func<HttpClient> Get { get; set; }
+    
+    static HttpClientFactory()
+    {
+        Get = (() => new HttpClient());
+    }
+}
+
+// Somewhere else in your PCL
+var client = HttpClientFactory.Get();
+
+// In your iOS app (i.e. the startup of your app)
+public static class AppDelegate
+{
+    public void FinishedLaunching(UIApplication app, NSDictionary options)
+    {
+        HttpClientFactory.Get = (() => new HttpClient(new AFNetworkHandler()));
+    }
+}
+```
+
 ## Building
 
 ```sh
