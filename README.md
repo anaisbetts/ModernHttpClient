@@ -51,6 +51,10 @@ public static class AppDelegate
 }
 ```
 
+## How can I use this in MvvmCross?
+
+[Implementing ModernHttpClient in MvvmCross](http://www.michaelridland.com/mobile/implementing-modernhttpclient-in-mvvmcross/)
+
 ## Building
 
 ```sh
