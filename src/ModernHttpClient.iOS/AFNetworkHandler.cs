@@ -121,7 +121,14 @@ namespace ModernHttpClient
             });
 
             operation.SetCompletionBlockWithSuccess(
-                (op, _) => onCompleted(),
+                (op, _) => {
+                    if (!completed) {
+                        completed = true;
+                        tcs.SetResult(operation);
+                    }
+
+                    onCompleted();
+                },
                 (op, err) => {
                     var ex = new ApplicationException();
                     ex.Data.Add("op", op);
