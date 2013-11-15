@@ -31,8 +31,10 @@ namespace ModernHttpClient
             if (request.Content != null) {
                 foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
 
-                var contentStream = await Task.Run(async () => await request.Content.ReadAsStreamAsync()).ConfigureAwait(false);
-                await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
+                await Task.Run(async () => {
+                    var contentStream = await request.Content.ReadAsStreamAsync().ConfigureAwait(false);
+                    await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
+                }).ConfigureAwait(false);
 
                 rq.OutputStream.Close();
             }
