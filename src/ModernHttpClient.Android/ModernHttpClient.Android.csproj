@@ -65,6 +65,9 @@
     <Compile Include="..\Shared\ConcatenatingStream.cs">
       <Link>ConcatenatingStream.cs</Link>
     </Compile>
+    <Compile Include="..\Shared\AsyncLock.cs">
+      <Link>AsyncLock.cs</Link>
+    </Compile>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>

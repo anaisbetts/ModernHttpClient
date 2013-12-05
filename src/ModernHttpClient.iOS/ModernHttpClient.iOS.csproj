@@ -17,7 +17,7 @@
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
     <OutputPath>bin\Debug</OutputPath>
-    <DefineConstants>DEBUG;</DefineConstants>
+    <DefineConstants>DEBUG; UIKIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -29,7 +29,6 @@
     </CustomCommands>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
-    <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <OutputPath>bin\Release</OutputPath>
     <ErrorReport>prompt</ErrorReport>
@@ -41,6 +40,7 @@
         <Command type="BeforeBuild" command="make AFNetworking.dll" workingdir="${SolutionDir}" />
       </CustomCommands>
     </CustomCommands>
+    <DefineConstants>UIKIT</DefineConstants>
   </PropertyGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.MonoTouch.CSharp.targets" />
   <ItemGroup>
@@ -58,6 +58,9 @@
     </Reference>
     <Compile Include="..\Shared\ConcatenatingStream.cs">
       <Link>ConcatenatingStream.cs</Link>
+    </Compile>
+    <Compile Include="..\Shared\AsyncLock.cs">
+      <Link>AsyncLock.cs</Link>
     </Compile>
   </ItemGroup>
 </Project>
