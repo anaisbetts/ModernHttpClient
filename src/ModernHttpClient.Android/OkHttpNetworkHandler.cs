@@ -65,7 +65,7 @@ namespace ModernHttpClient
                 } while (!ct.IsCancellationRequested && read > 0);
 
                 ct.ThrowIfCancellationRequested();
-            }, ct);
+            }, ct).ConfigureAwait(false);
         }
     }
 }
