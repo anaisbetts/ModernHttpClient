@@ -3,17 +3,10 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using Android.App;
-using Android.Content;
-using Android.OS;
-using Android.Runtime;
-using Android.Views;
-using Android.Widget;
 using System.IO;
+using System.Net;
 using System.Net.Http;
 using OkHttp;
-using System.Net;
 
 namespace ModernHttpClient
 {
@@ -34,14 +27,12 @@ namespace ModernHttpClient
                 await Task.Run(async () => {
                     var contentStream = await request.Content.ReadAsStreamAsync().ConfigureAwait(false);
                     await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
-                }).ConfigureAwait(false);
+                }, cancellationToken).ConfigureAwait(false);
 
                 rq.OutputStream.Close();
             }
 
             return await Task.Run (() => {
-                cancellationToken.ThrowIfCancellationRequested();
-
                 // NB: This is the line that blocks until we have headers
                 var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
 
@@ -56,7 +47,7 @@ namespace ModernHttpClient
 
                 ret.RequestMessage = request;
                 return ret;
-            });
+            }, cancellationToken).ConfigureAwait(false);
         }
 
         async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
@@ -74,7 +65,7 @@ namespace ModernHttpClient
                 } while (!ct.IsCancellationRequested && read > 0);
 
                 ct.ThrowIfCancellationRequested();
-            });
+            }, ct);
         }
     }
 }
