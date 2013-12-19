@@ -40,16 +40,12 @@ namespace ModernHttpClient
             }
 
             return await Task.Run (() => {
-                if (cancellationToken.IsCancellationRequested) {
-                    throw new TaskCanceledException();
-                }
+                cancellationToken.ThrowIfCancellationRequested();
 
                 // NB: This is the line that blocks until we have headers
                 var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
 
-                if (cancellationToken.IsCancellationRequested) {
-                    throw new TaskCanceledException();
-                }
+                cancellationToken.ThrowIfCancellationRequested();
 
                 ret.Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
                     () => rq.InputStream,
@@ -77,9 +73,7 @@ namespace ModernHttpClient
                     }
                 } while (!ct.IsCancellationRequested && read > 0);
 
-                if (ct.IsCancellationRequested) {
-                    throw new OperationCanceledException();
-                }
+                ct.ThrowIfCancellationRequested();
             });
         }
     }
