@@ -4,7 +4,7 @@
     <version>1.0.1</version>
     <authors>Paul Betts</authors>
     <owners>Paul Betts</owners>
-    <licenseUrl>https://github.com/paulcbetts/ModernHttpClient/blob/master/LICENSE</licenseUrl>    
+    <licenseUrl>https://github.com/paulcbetts/ModernHttpClient/blob/master/COPYING</licenseUrl>
     <projectUrl>https://github.com/paulcbetts/ModernHttpClient</projectUrl>
     <id>modernhttpclient</id>
     <title>ModernHttpClient</title>
