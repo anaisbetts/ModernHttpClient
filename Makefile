@@ -6,7 +6,7 @@ all: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
 
 package: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
 	mono vendor/nuget/NuGet.exe pack ./ModernHttpClient.nuspec
-	mv ModernHttpClient.nupkg ./build/
+	mv modernhttpclient*.nupkg ./build/
 
 vendor:
 	git submodule sync
