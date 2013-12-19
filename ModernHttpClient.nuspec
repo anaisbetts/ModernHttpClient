@@ -1,0 +1,20 @@
+﻿<?xml version="1.0"?>
+<package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
+  <metadata>
+    <version>1.0.1</version>
+    <authors>Paul Betts</authors>
+    <owners>Paul Betts</owners>
+    <licenseUrl>https://github.com/paulcbetts/ModernHttpClient/blob/master/LICENSE</licenseUrl>    
+    <projectUrl>https://github.com/paulcbetts/ModernHttpClient</projectUrl>
+    <id>modernhttpclient</id>
+    <title>ModernHttpClient</title>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>Write your app using System.Net.Http, but drop this library in and it will go drastically faster.</description>
+    <summary>Write your app using System.Net.Http, but drop this library in and it will go drastically faster.</summary>
+    <copyright>Copyright Paul Betts © 2012</copyright>
+  </metadata>
+
+  <files>
+    <file src="build/**/*.*" target="lib" />
+  </files>
+</package>
