@@ -13,10 +13,19 @@ namespace ModernHttpClient
     public class OkHttpNetworkHandler : HttpMessageHandler
     {
         readonly OkHttpClient client = new OkHttpClient();
+        readonly bool throwOnCaptiveNetwork;
+
+        public OkHttpNetworkHandler() : this(false) {}
+
+        public OkHttpNetworkHandler(bool throwOnCaptiveNetwork)
+        {
+            this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+        }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var rq = client.Open(new Java.Net.URL(request.RequestUri.ToString()));
+            var url = new Java.Net.URL(request.RequestUri.ToString());
+            var rq = client.Open(url);
             rq.RequestMethod = request.Method.Method.ToUpperInvariant();
 
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
@@ -36,12 +45,27 @@ namespace ModernHttpClient
                 // NB: This is the line that blocks until we have headers
                 var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
 
+                // Test to see if we're being redirected (i.e. in a captive network)
+                if (throwOnCaptiveNetwork && (url.Host != rq.URL.Host)) {
+                    throw new WebException("Hostnames don't match, you are probably on a captive network");
+                }
+
                 cancellationToken.ThrowIfCancellationRequested();
 
                 ret.Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
                     () => rq.InputStream,
                     () => rq.ErrorStream ?? new MemoryStream (),
                 }, true));
+
+                var keyValuePairs = rq.HeaderFields.Keys
+                    .Where(k => k != null)      // Yes, this happens. I can't even. 
+                    .SelectMany(k => rq.HeaderFields[k]
+                        .Select(val => new { Key = k, Value = val }));
+
+                foreach (var v in keyValuePairs) {
+                    ret.Headers.TryAddWithoutValidation(v.Key, v.Value);
+                    ret.Content.Headers.TryAddWithoutValidation(v.Key, v.Value);
+                }
 
                 cancellationToken.Register (ret.Content.Dispose);
 
