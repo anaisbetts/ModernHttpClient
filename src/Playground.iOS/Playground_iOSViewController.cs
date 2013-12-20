@@ -40,6 +40,16 @@ namespace Playground.iOS
                 resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                 result.Text = "Got the headers!";
 
+                Console.WriteLine("Headers");
+                foreach (var v in resp.Headers) {
+                    Console.WriteLine("{0}: {1}", v.Key, String.Join(",", v.Value));
+                }
+
+                Console.WriteLine("Content Headers");
+                foreach (var v in resp.Content.Headers) {
+                    Console.WriteLine("{0}: {1}", v.Key, String.Join(",", v.Value));
+                }
+
                 var bytes = await resp.Content.ReadAsByteArrayAsync();
                 result.Text = String.Format("Read {0} bytes", bytes.Length);
 
