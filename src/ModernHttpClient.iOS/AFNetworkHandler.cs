@@ -94,6 +94,7 @@ namespace ModernHttpClient
 
             foreach(var v in resp.AllHeaderFields) {
                 ret.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
+                ret.Content.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
             }
 
             lock (pins) { pins.Remove(rq); }
