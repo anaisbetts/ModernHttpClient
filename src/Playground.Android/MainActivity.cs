@@ -55,6 +55,10 @@ namespace Playground.Android
                     resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                     result.Text = "Got the headers!";
 
+                    foreach (var v in resp.Headers) {
+                        Console.WriteLine("{0}: {1}", v.Key, String.Join(",", v.Value));
+                    }
+
                     var bytes = await resp.Content.ReadAsByteArrayAsync();
                     result.Text = String.Format("Read {0} bytes", bytes.Length);
 

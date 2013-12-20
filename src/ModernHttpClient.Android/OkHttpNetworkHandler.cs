@@ -57,6 +57,16 @@ namespace ModernHttpClient
                     () => rq.ErrorStream ?? new MemoryStream (),
                 }, true));
 
+                var keyValuePairs = rq.HeaderFields.Keys
+                    .Where(k => k != null)      // Yes, this happens. I can't even. 
+                    .SelectMany(k => rq.HeaderFields[k]
+                        .Select(val => new { Key = k, Value = val }));
+
+                foreach (var v in keyValuePairs) {
+                    ret.Headers.TryAddWithoutValidation(v.Key, v.Value);
+                    ret.Content.Headers.TryAddWithoutValidation(v.Key, v.Value);
+                }
+
                 cancellationToken.Register (ret.Content.Dispose);
 
                 ret.RequestMessage = request;
