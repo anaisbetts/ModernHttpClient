@@ -24,8 +24,14 @@ namespace ModernHttpClient
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
-            var url = new Java.Net.URL(request.RequestUri.ToString());
-            var rq = client.Open(url);
+            var java_uri = request.RequestUri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
+            var url = new Java.Net.URL(java_uri);
+            Java.Net.HttpURLConnection rq;
+            try {
+                rq = client.Open(url);
+            } catch(Java.Net.UnknownHostException e) {
+                throw new WebException("Name resolution failure", e, WebExceptionStatus.NameResolutionFailure, null);
+            }
             rq.RequestMethod = request.Method.Method.ToUpperInvariant();
 
             foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
