@@ -14,12 +14,18 @@
         android:layout_height="wrap_content"
         android:id="@+id/cancelButton" />
     <TextView
+        android:text="Status Code"
+        android:textAppearance="?android:attr/textAppearanceMedium"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:id="@+id/status"
+        android:layout_marginTop="8dp" />
+    <TextView
         android:text="Here's what happened"
         android:textAppearance="?android:attr/textAppearanceMedium"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"
-        android:id="@+id/result"
-        android:layout_marginTop="8dp" />
+        android:id="@+id/result" />
     <TextView
         android:text="MD5 sum"
         android:textAppearance="?android:attr/textAppearanceMedium"

@@ -34,6 +34,7 @@ namespace Playground.Android
             var cancel = FindViewById<Button>(Resource.Id.cancelButton);
             var result = FindViewById<TextView>(Resource.Id.result);
             var hashView = FindViewById<TextView>(Resource.Id.md5sum);
+            var status = FindViewById<TextView>(Resource.Id.status);
 
             var resp = default(HttpResponseMessage);
 
@@ -51,9 +52,11 @@ namespace Playground.Android
                 st.Start();
                 try {
                     //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
-                    var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip"; 
+                    var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
                     resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                     result.Text = "Got the headers!";
+
+                    status.Text = string.Format("HTTP {0}: {1}", (int)resp.StatusCode, resp.ReasonPhrase);
 
                     foreach (var v in resp.Headers) {
                         Console.WriteLine("{0}: {1}", v.Key, String.Join(",", v.Value));
