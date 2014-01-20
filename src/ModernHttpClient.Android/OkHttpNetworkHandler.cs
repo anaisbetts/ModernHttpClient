@@ -59,7 +59,7 @@ namespace ModernHttpClient
                 cancellationToken.ThrowIfCancellationRequested();
 
                 ret.Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
-                    () => rq.InputStream,
+                    () => ret.IsSuccessStatusCode ? rq.InputStream : new MemoryStream(),
                     () => rq.ErrorStream ?? new MemoryStream (),
                 }, true));
 
