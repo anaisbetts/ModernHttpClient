@@ -8,6 +8,8 @@ using System.Diagnostics;
 using ModernHttpClient;
 using System.Text;
 using System.Security.Cryptography;
+using System.Threading.Tasks;
+using Newtonsoft.Json;
 
 namespace Playground.iOS
 {
@@ -15,6 +17,15 @@ namespace Playground.iOS
     {
         public Playground_iOSViewController () : base ("Playground_iOSViewController", null)
         {
+            Task.Run (async () => {
+                var client = new HttpClient(new AFNetworkHandler());
+
+                var item = new { MyProperty = "Property Value" };
+                var content = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
+                var result = await client.PostAsync("http://requestb.in/1aj9b9c1", content);
+
+                result.EnsureSuccessStatusCode();
+            });
         }
 
         CancellationTokenSource currentToken;
