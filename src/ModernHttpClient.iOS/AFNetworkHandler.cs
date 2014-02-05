@@ -23,7 +23,7 @@ namespace ModernHttpClient
 
             if (request.Content != null) {
                 await request.Content.CopyToAsync(ms).ConfigureAwait(false);
-                headers = headers.Union(request.Content.Headers);
+                headers = headers.Union(request.Content.Headers).ToArray();
             }
 
             var rq = new NSMutableUrlRequest() {
