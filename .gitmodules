@@ -1,6 +1,3 @@
 [submodule "vendor/okhttp"]
 	path = vendor/okhttp
 	url = https://github.com/paulcbetts/OkHttp-Xamarin.git
-[submodule "vendor/afnetworking"]
-	path = vendor/afnetworking
-	url = https://github.com/thefactory/AFNetworking-Sharp.git

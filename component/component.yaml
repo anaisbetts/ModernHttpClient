@@ -14,7 +14,6 @@ icons:
   - icon_512x512.png
 libraries: 
   ios: 
-    - ../build/MonoTouch/AFNetworking.dll
     - ../build/MonoTouch/ModernHttpClient.iOS.dll
   android:
     - ../build/MonoAndroid/OkHttp.dll
@@ -25,4 +24,3 @@ samples:
   - name: "HttpClient.Android Sample"
     path: ../samples/HttpClient.Android/HttpClient.Android.sln
 ...
-
