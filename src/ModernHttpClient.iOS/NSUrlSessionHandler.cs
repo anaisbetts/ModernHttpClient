@@ -236,6 +236,8 @@ namespace ModernHttpClient
 
             public void AddByteArray(byte[] arrayToAdd)
             {
+                if (isCompleted) throw new InvalidOperationException("Can't add byte arrays once Complete() is called");
+
                 lock (bytes) {
                     maxLength += arrayToAdd.Length;
                     bytes.Add(arrayToAdd);
