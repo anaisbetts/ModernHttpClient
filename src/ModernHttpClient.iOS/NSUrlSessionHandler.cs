@@ -191,6 +191,10 @@ namespace ModernHttpClient
             {
                 int bytesRead = 0;
 
+                if (isCompleted && position == maxLength) {
+                    return 0;
+                }
+
                 using (await readStreamLock.LockAsync()) {
                     lock (bytes) {
                         int absPositionOfCurrentBuffer = 0;
