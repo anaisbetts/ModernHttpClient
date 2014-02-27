@@ -179,6 +179,7 @@ namespace ModernHttpClient
         bool isCompleted;
         long maxLength = 0;
         long position = 0;
+        int offsetInCurrentBuffer = 0;
 
         public ByteArrayListStream()
         {
@@ -197,41 +198,13 @@ namespace ModernHttpClient
 
         public override long Seek(long offset, SeekOrigin origin)
         { 
-            var result = default(long);
-            switch (origin) {
-            case SeekOrigin.Begin:
-                result = offset;
-                break;
-            case SeekOrigin.Current:
-                result = position + offset;
-                break;
-            case SeekOrigin.End:
-                result = maxLength + offset;
-                break;
-            }
-                
-            return (Position = result);
+            throw new NotSupportedException();
         }
 
         public override long Position {
             get { return position; }
             set {
-                if (exception != null) throw exception;
-
-                if (value < 0 || value > maxLength) {
-                    throw new ArgumentException();
-                }
-
-                // Seeking during a read? No way.
-                lock (bytes) {
-                    position = value;
-
-                    // NB: If we seek back to where we have more data,
-                    // unblock anyone waiting
-                    if (position < maxLength) {
-                        Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
-                    }
-                }
+                throw new NotSupportedException();
             }
         }
 
@@ -271,6 +244,7 @@ namespace ModernHttpClient
         {
         retry:
             int bytesRead = 0;
+            int buffersToRemove = 0;
 
             if (isCompleted && position == maxLength) {
                 return 0;
@@ -280,28 +254,31 @@ namespace ModernHttpClient
 
             using (await readStreamLock.LockAsync()) {
                 lock (bytes) {
-                    int absPositionOfCurrentBuffer = 0;
-
                     foreach (var buf in bytes) {
                         cancellationToken.ThrowIfCancellationRequested();
                         if (exception != null) throw exception;
 
-                        // Get ourselves to the right buffer
-                        if (position > absPositionOfCurrentBuffer + buf.Length) {
-                            absPositionOfCurrentBuffer += buf.Length;
-                            continue;
-                        }
-
-                        int offsetInSrcBuffer = Math.Max(0, (int)position - absPositionOfCurrentBuffer);
-                        int toCopy = Math.Min(count, buf.Length - offsetInSrcBuffer);
-                        Array.ConstrainedCopy(buf, offsetInSrcBuffer, buffer, offset, toCopy);
+                        int toCopy = Math.Min(count, buf.Length - offsetInCurrentBuffer);
+                        Array.ConstrainedCopy(buf, offsetInCurrentBuffer, buffer, offset, toCopy);
 
                         count -= toCopy;
                         offset += toCopy;
                         bytesRead += toCopy;
-                        absPositionOfCurrentBuffer += buf.Length;
+
+                        offsetInCurrentBuffer += toCopy;
+
+                        if (offsetInCurrentBuffer >= buf.Length) {
+                            offsetInCurrentBuffer = 0;
+                            buffersToRemove++;
+                        }
 
                         if (count < 0) break;
+                    }
+
+                    // Remove buffers that we read in this operation
+                    while (buffersToRemove > 0) {
+                        bytes.RemoveAt(0);
+                        buffersToRemove--;
                     }
 
                     position += bytesRead;
