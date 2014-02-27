@@ -3,7 +3,7 @@ Xamarin applications via a custom HttpClient handler. Write your app using
 System.Net.Http, but drop this library in and it will go drastically faster.
 This is made possible by two native libraries:
 
-* On iOS, [AFNetworking 1.3.3](http://afnetworking.com/)
+* On iOS, via NSURLSession
 * On Android, via [OkHttp 1.2.1](http://square.github.io/okhttp/)
 
 ## Usage
@@ -15,7 +15,7 @@ works:
 On iOS:
 
 ```csharp
-var httpClient = new HttpClient(new AFNetworkHandler());
+var httpClient = new HttpClient(new NSUrlSessionHandler());
 ```
 
 On Android:
