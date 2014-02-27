@@ -138,6 +138,9 @@ namespace ModernHttpClient
                 }
 
                 data.ResponseBody.Complete();
+                lock (This.inflightRequests) {
+                    This.inflightRequests.Remove(task);
+                }
             }
 
             public override void DidReceiveData (NSUrlSession session, NSUrlSessionDataTask dataTask, NSData byteData)
