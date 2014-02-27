@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
@@ -11,6 +11,7 @@ using System.Net;
 namespace ModernHttpClient
 {
     // NB: This class is only here so we don't break backwards compatibility
+    [Obsolete("AFNetworkHandler is no longer supported, please change to NSUrlSessionHandler", error: false)]
     public class AFNetworkHandler : NSUrlSessionHandler {}
 
     class InflightOperation
