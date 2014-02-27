@@ -97,7 +97,7 @@ namespace ModernHttpClient
 
                     var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
                         Content = new CancellableStreamContent(data.ResponseBody, () => {
-                            Console.WriteLine("Cancelling!");
+                            //Console.WriteLine("Cancelling!");
                             if (!data.IsCompleted) dataTask.Cancel();
                             data.IsCompleted = true;
 
@@ -319,7 +319,7 @@ namespace ModernHttpClient
             lock (bytes) {
                 maxLength += arrayToAdd.Length;
                 bytes.Add(arrayToAdd);
-                Console.WriteLine("Added a new byte array, {0}: max = {1}", arrayToAdd.Length, maxLength);
+                //Console.WriteLine("Added a new byte array, {0}: max = {1}", arrayToAdd.Length, maxLength);
             }
 
             Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
