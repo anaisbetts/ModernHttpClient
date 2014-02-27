@@ -16,6 +16,7 @@ namespace ModernHttpClient
         public TaskCompletionSource<HttpResponseMessage> FutureResponse { get; set; }
         public ByteArrayListStream ResponseBody { get; set; }
         public CancellationToken CancellationToken { get; set; }
+        public bool IsCompleted { get; set; }
     }
 
     public class NSUrlSessionHandler : HttpMessageHandler
@@ -77,6 +78,7 @@ namespace ModernHttpClient
         class DataTaskDelegate : NSUrlSessionDataDelegate
         {
             NSUrlSessionHandler This { get; set; }
+
             public DataTaskDelegate(NSUrlSessionHandler that)
             {
                 this.This = that;
@@ -94,7 +96,13 @@ namespace ModernHttpClient
                     var resp = (NSHttpUrlResponse)response;
 
                     var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
-                        Content = new StreamContent(data.ResponseBody),
+                        Content = new CancellableStreamContent(data.ResponseBody, () => {
+                            Console.WriteLine("Cancelling!");
+                            if (!data.IsCompleted) dataTask.Cancel();
+                            data.IsCompleted = true;
+
+                            data.ResponseBody.SetException(new OperationCanceledException());
+                        }),
                         RequestMessage = data.Request,
                     };
 
@@ -114,8 +122,15 @@ namespace ModernHttpClient
             public override void DidCompleteWithError (NSUrlSession session, NSUrlSessionTask task, NSError error)
             {
                 var data = getResponseForTask(task);
+                data.IsCompleted = true;
+
                 if (error != null) {
-                    var ex = new WebException(error.LocalizedDescription);
+                    var ex = default(Exception);
+                    if (error.Description.StartsWith("cancel", StringComparison.OrdinalIgnoreCase)) {
+                        ex = new OperationCanceledException();
+                    } else {
+                        ex = new WebException(error.LocalizedDescription);
+                    }
 
                     data.FutureResponse.TrySetException(ex);
                     data.ResponseBody.SetException(ex);
@@ -128,7 +143,13 @@ namespace ModernHttpClient
             public override void DidReceiveData (NSUrlSession session, NSUrlSessionDataTask dataTask, NSData byteData)
             {
                 var data = getResponseForTask(dataTask);
-                data.ResponseBody.AddByteArray(byteData.ToArray());
+                var bytes = byteData.ToArray();
+
+                // NB: If we're cancelled, we still might have one more chunk 
+                // of data that attempts to be delivered
+                if (data.IsCompleted) return;
+
+                data.ResponseBody.AddByteArray(bytes);
             }
 
             public override void WillCacheResponse (NSUrlSession session, NSUrlSessionDataTask dataTask, NSCachedUrlResponse proposedResponse, Action<NSCachedUrlResponse> completionHandler)
@@ -245,6 +266,7 @@ namespace ModernHttpClient
          * read, signalling we're at the end of the stream */
         public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
         {
+        retry:
             int bytesRead = 0;
 
             if (isCompleted && position == maxLength) {
@@ -291,12 +313,24 @@ namespace ModernHttpClient
             }
 
             if (bytesRead == 0 && !isCompleted) {
-                throw new Exception("Aw crap, we screwed up");
+                // NB: There are certain race conditions where we somehow acquire
+                // the lock yet are at the end of the stream, and we're not completed
+                // yet. We should try again so that we can get stuck in the lock.
+                goto retry;
             }
 
             if (cancellationToken.IsCancellationRequested) {
                 Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
                 cancellationToken.ThrowIfCancellationRequested();
+            }
+
+            if (exception != null) {
+                Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
+
+                // NB: Throwing the OperationCanceledException here that we set
+                // when the CancellationStreamContent is disposed doesn't seem
+                // to be recognized by async/await, so we have to lie instead.
+                return 0;
             }
 
             return bytesRead;
@@ -326,6 +360,24 @@ namespace ModernHttpClient
         {
             exception = ex;
             Complete();
+        }
+    }
+
+    sealed class CancellableStreamContent : StreamContent
+    {
+        Action onDispose;
+
+        public CancellableStreamContent(Stream source, Action onDispose) : base(source)
+        {
+            this.onDispose = onDispose;
+        }
+
+        protected override void Dispose(bool disposing)
+        {
+            var disp = Interlocked.Exchange(ref onDispose, null);
+            if (disp != null) disp();
+
+            base.Dispose(disposing);
         }
     }
 
