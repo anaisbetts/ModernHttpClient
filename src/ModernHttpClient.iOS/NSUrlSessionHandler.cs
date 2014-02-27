@@ -54,8 +54,6 @@ namespace ModernHttpClient
                 Url = NSUrl.FromString(request.RequestUri.AbsoluteUri),
             };
 
-            var host = request.RequestUri.GetLeftPart(UriPartial.Authority);
-
             var op = session.CreateDataTask(rq);
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -114,10 +112,21 @@ namespace ModernHttpClient
             public override void DidCompleteWithError (NSUrlSession session, NSUrlSessionTask task, NSError error)
             {
                 var data = getResponseForTask(task);
+                if (error != null) {
+                    var ex = new WebException(error.LocalizedDescription);
+
+                    data.FutureResponse.TrySetException(ex);
+                    data.ResponseBody.SetException(ex);
+                    return;
+                }
+
+                data.ResponseBody.Complete();
             }
 
-            public override void DidReceiveData (NSUrlSession session, NSUrlSessionDataTask dataTask, NSData data)
+            public override void DidReceiveData (NSUrlSession session, NSUrlSessionDataTask dataTask, NSData byteData)
             {
+                var data = getResponseForTask(dataTask);
+                data.ResponseBody.AddByteArray(byteData.ToArray());
             }
 
             public override void WillCacheResponse (NSUrlSession session, NSUrlSessionDataTask dataTask, NSCachedUrlResponse proposedResponse, Action<NSCachedUrlResponse> completionHandler)
@@ -136,6 +145,7 @@ namespace ModernHttpClient
             
     class ByteArrayListStream : Stream
     {
+        Exception exception;
         IDisposable lockRelease = EmptyDisposable.Instance;
         readonly AsyncLock readStreamLock = new AsyncLock();
         readonly List<byte[]> bytes = new List<byte[]>();
@@ -180,6 +190,8 @@ namespace ModernHttpClient
         public override long Position {
             get { return position; }
             set {
+                if (exception != null) throw exception;
+
                 if (value < 0 || value > maxLength) {
                     throw new ArgumentException();
                 }
@@ -237,6 +249,8 @@ namespace ModernHttpClient
                 return 0;
             }
 
+            if (exception != null) throw exception;
+
             using (await readStreamLock.LockAsync()) {
                 lock (bytes) {
                     int absPositionOfCurrentBuffer = 0;
@@ -244,6 +258,7 @@ namespace ModernHttpClient
 
                     foreach (var buf in bytes) {
                         cancellationToken.ThrowIfCancellationRequested();
+                        if (exception != null) throw exception;
 
                         // Get ourselves to the right buffer
                         absPositionOfCurrentBuffer += buf.Length;
@@ -277,6 +292,7 @@ namespace ModernHttpClient
 
         public void AddByteArray(byte[] arrayToAdd)
         {
+            if (exception != null) throw exception;
             if (isCompleted) throw new InvalidOperationException("Can't add byte arrays once Complete() is called");
 
             lock (bytes) {
@@ -291,6 +307,12 @@ namespace ModernHttpClient
         {
             isCompleted = true;
             Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
+        }
+
+        public void SetException(Exception ex)
+        {
+            exception = ex;
+            Complete();
         }
     }
 
