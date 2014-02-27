@@ -62,5 +62,6 @@
     <Compile Include="..\Shared\AsyncLock.cs">
       <Link>AsyncLock.cs</Link>
     </Compile>
+    <Compile Include="NSUrlSessionHandler.cs" />
   </ItemGroup>
 </Project>
