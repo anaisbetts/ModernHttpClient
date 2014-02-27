@@ -329,11 +329,7 @@ namespace ModernHttpClient
 
             if (exception != null) {
                 Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
-
-                // NB: Throwing the OperationCanceledException here that we set
-                // when the CancellationStreamContent is disposed doesn't seem
-                // to be recognized by async/await, so we have to lie instead.
-                return 0;
+                throw exception;
             }
 
             return bytesRead;
@@ -380,7 +376,12 @@ namespace ModernHttpClient
             var disp = Interlocked.Exchange(ref onDispose, null);
             if (disp != null) disp();
 
-            base.Dispose(disposing);
+            // EVIL HAX: We have to let at least one ReadAsync of the underlying
+            // stream fail with OperationCancelledException before we can dispose
+            // the base, or else the exception coming out of the ReadAsync will
+            // be an ObjectDisposedException from an internal MemoryStream. This isn't
+            // the Ideal way to fix this, but #yolo.
+            Task.Run(() => base.Dispose(disposing));
         }
     }
 
