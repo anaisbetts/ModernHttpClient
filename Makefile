@@ -12,9 +12,6 @@ vendor:
 	git submodule sync
 	git submodule update --init --recursive
 
-AFNetworking.dll: vendor
-	cd vendor/afnetworking/; make
-
 OkHttp.dll: vendor
 	$(MDTOOL) build -c:Release ./vendor/okhttp/OkHttp/OkHttp.csproj
 	cp ./vendor/okhttp/OkHttp/bin/Release/OkHttp.dll ./vendor/okhttp/OkHttp.dll
@@ -24,7 +21,7 @@ ModernHttpClient.Android.dll: OkHttp.dll
 	mkdir -p ./build/MonoAndroid
 	mv ./src/ModernHttpClient.Android/bin/Release/* ./build/MonoAndroid/
 
-ModernHttpClient.iOS.dll: AFNetworking.dll
+ModernHttpClient.iOS.dll:
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient.iOS/ModernHttpClient.iOS.csproj
 	mkdir -p ./build/MonoTouch
 	mv ./src/ModernHttpClient.iOS/bin/Release/* ./build/MonoTouch/
