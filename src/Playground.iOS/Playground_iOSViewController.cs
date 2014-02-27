@@ -17,8 +17,9 @@ namespace Playground.iOS
     {
         public Playground_iOSViewController () : base ("Playground_iOSViewController", null)
         {
+            /*
             Task.Run (async () => {
-                var client = new HttpClient(new AFNetworkHandler());
+                var client = new HttpClient(new NSUrlSessionHandler());
 
                 var item = new { MyProperty = "Property Value" };
                 var content = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
@@ -26,6 +27,7 @@ namespace Playground.iOS
 
                 result.EnsureSuccessStatusCode();
             });
+            */
         }
 
         CancellationTokenSource currentToken;
@@ -39,7 +41,7 @@ namespace Playground.iOS
 
         async partial void doIt (MonoTouch.Foundation.NSObject sender)
         {
-            var client = new HttpClient(new AFNetworkHandler());
+            var client = new HttpClient(new NSUrlSessionHandler());
             currentToken = new CancellationTokenSource();
             var st = new Stopwatch();
 
