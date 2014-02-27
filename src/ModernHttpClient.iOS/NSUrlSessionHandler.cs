@@ -160,6 +160,27 @@ namespace ModernHttpClient
                 return this.ReadAsync(buffer, offset, count).Result;
             }
 
+            /* OMG THIS CODE IS COMPLICATED
+             *
+             * Here's the core idea. We want to create a ReadAsync function that
+             * reads from our list of byte arrays **until it gets to the end of
+             * our current list**.
+             *
+             * If we're not there yet, we keep returning data, serializing access
+             * to the underlying position pointer (i.e. we definitely don't want
+             * people concurrently moving position along). If we try to read past
+             * the end, we return the section of data we could read and complete
+             * it.
+             *
+             * Here's where the tricky part comes in. If we're not Completed (i.e.
+             * the caller still wants to add more byte arrays in the future) and
+             * we're at the end of the current stream, we want to *block* the read
+             * (not blocking, but async blocking whatever you know what I mean),
+             * until somebody adds another byte[] to chew through, or if someone
+             * rewinds the position.
+             *
+             * If we *are* completed, we should return zero to simply complete the
+             * read, signalling we're at the end of the stream */
             public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
                 int bytesRead = 0;
