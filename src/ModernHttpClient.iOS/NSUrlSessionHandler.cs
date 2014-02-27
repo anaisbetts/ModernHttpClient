@@ -107,6 +107,10 @@ namespace ModernHttpClient
                     };
 
                     foreach(var v in resp.AllHeaderFields) {
+                        // NB: Cocoa trolling us so hard by giving us back dummy
+                        // dictionary entries
+                        if (v.Key == null || v.Value == null) continue;
+
                         ret.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
                         ret.Content.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
                     }
@@ -153,11 +157,6 @@ namespace ModernHttpClient
                 if (data.IsCompleted) return;
 
                 data.ResponseBody.AddByteArray(bytes);
-            }
-
-            public override void WillCacheResponse (NSUrlSession session, NSUrlSessionDataTask dataTask, NSCachedUrlResponse proposedResponse, Action<NSCachedUrlResponse> completionHandler)
-            {
-                completionHandler(null);
             }
 
             InflightOperation getResponseForTask(NSUrlSessionTask task)
