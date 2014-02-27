@@ -103,9 +103,11 @@ namespace ModernHttpClient
                         ret.Content.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
                     }
 
+                    data.FutureResponse.TrySetResult(ret);
                 } catch (Exception ex) {
                     data.FutureResponse.TrySetException(ex);
                 }
+
                 completionHandler(NSUrlSessionResponseDisposition.Allow);
             }
 
@@ -164,7 +166,7 @@ namespace ModernHttpClient
         public override bool CanWrite { get { return false; } }
         public override void Write(byte[] buffer, int offset, int count) { throw new NotSupportedException(); }
         public override void WriteByte(byte value) { throw new NotSupportedException(); }
-        public override bool CanSeek { get { return true; } }
+        public override bool CanSeek { get { return false; } }
         public override bool CanTimeout { get { return false; } }
         public override void SetLength(long value) { throw new NotSupportedException(); }
         public override void Flush() { }
@@ -254,29 +256,30 @@ namespace ModernHttpClient
             using (await readStreamLock.LockAsync()) {
                 lock (bytes) {
                     int absPositionOfCurrentBuffer = 0;
-                    int destOffset = offset;
 
                     foreach (var buf in bytes) {
                         cancellationToken.ThrowIfCancellationRequested();
                         if (exception != null) throw exception;
 
                         // Get ourselves to the right buffer
-                        absPositionOfCurrentBuffer += buf.Length;
-                        if (position > absPositionOfCurrentBuffer) {
+                        if (position > absPositionOfCurrentBuffer + buf.Length) {
+                            absPositionOfCurrentBuffer += buf.Length;
                             continue;
                         }
 
-                        int offsetInSrcBuffer = (int)position - absPositionOfCurrentBuffer;
+                        int offsetInSrcBuffer = Math.Max(0, (int)position - absPositionOfCurrentBuffer);
                         int toCopy = Math.Min(count, buf.Length - offsetInSrcBuffer);
                         Array.ConstrainedCopy(buf, offsetInSrcBuffer, buffer, offset, toCopy);
 
-                        bytesRead += toCopy;
-                        offset += toCopy;
-                        position += toCopy;
                         count -= toCopy;
+                        offset += toCopy;
+                        bytesRead += toCopy;
+                        absPositionOfCurrentBuffer += buf.Length;
 
                         if (count < 0) break;
                     }
+
+                    position += bytesRead;
                 }
             }
 
@@ -284,7 +287,16 @@ namespace ModernHttpClient
             // the next read to park itself unless AddByteArray or Complete 
             // posts
             if (position >= maxLength && !isCompleted) {
-                readStreamLock.LockAsync().ContinueWith(t => lockRelease = t.Result);
+                lockRelease = await readStreamLock.LockAsync();
+            }
+
+            if (bytesRead == 0 && !isCompleted) {
+                throw new Exception("Aw crap, we screwed up");
+            }
+
+            if (cancellationToken.IsCancellationRequested) {
+                Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
+                cancellationToken.ThrowIfCancellationRequested();
             }
 
             return bytesRead;
@@ -298,6 +310,7 @@ namespace ModernHttpClient
             lock (bytes) {
                 maxLength += arrayToAdd.Length;
                 bytes.Add(arrayToAdd);
+                Console.WriteLine("Added a new byte array, {0}: max = {1}", arrayToAdd.Length, maxLength);
             }
 
             Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
