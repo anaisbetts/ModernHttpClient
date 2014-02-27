@@ -145,6 +145,12 @@ namespace ModernHttpClient
                     // Seeking during a read? No way.
                     lock (bytes) {
                         position = value;
+
+                        // NB: If we seek back to where we have more data,
+                        // unblock anyone waiting
+                        if (position < maxLength) {
+                            Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
+                        }
                     }
                 }
             }
