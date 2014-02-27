@@ -10,6 +10,9 @@ using System.Net;
 
 namespace ModernHttpClient
 {
+    // NB: This class is only here so we don't break backwards compatibility
+    public class AFNetworkHandler : NSUrlSessionHandler {}
+
     class InflightOperation
     {
         public HttpRequestMessage Request { get; set; }

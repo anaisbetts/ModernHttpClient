@@ -51,7 +51,6 @@
     <Reference Include="System.Net.Http" />
     <Folder Include="Resources\" />
     <Folder Include="Properties\" />
-    <Compile Include="AFNetworkHandler.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Reference Include="AFNetworking">
       <HintPath>..\..\vendor\afnetworking\AFNetworking.dll</HintPath>
