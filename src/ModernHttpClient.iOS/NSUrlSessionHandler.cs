@@ -271,7 +271,7 @@ namespace ModernHttpClient
                             buffersToRemove++;
                         }
 
-                        if (count < 0) break;
+                        if (count <= 0) break;
                     }
 
                     // Remove buffers that we read in this operation
