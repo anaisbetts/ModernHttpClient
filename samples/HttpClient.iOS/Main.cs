@@ -52,7 +52,7 @@ namespace HttpClient
 			TableViewSelector.Configure (this.stack, new string [] {
 				"WebRequest",
 				"HttpClient/CFNetwork",
-				"HttpClient/AFNetworking"
+				"HttpClient/NSURLSession"
 			});
 			                   
 			window.MakeKeyAndVisible ();
@@ -74,7 +74,7 @@ namespace HttpClient
 				await new NetHttp (this).HttpSample (new CFNetworkHandler ());
 				break;
 			case 2:
-				await new NetHttp (this).HttpSample (new AFNetworkHandler());
+				await new NetHttp (this).HttpSample (new NSUrlSessionHandler());
 				break;
 			}
 		}
