@@ -17,17 +17,15 @@ namespace Playground.iOS
     {
         public Playground_iOSViewController () : base ("Playground_iOSViewController", null)
         {
-            /*
             Task.Run (async () => {
                 var client = new HttpClient(new NSUrlSessionHandler());
 
                 var item = new { MyProperty = "Property Value" };
                 var content = new StringContent(JsonConvert.SerializeObject(item), Encoding.UTF8, "application/json");
-                var result = await client.PostAsync("http://requestb.in/1aj9b9c1", content);
+                //var result = await client.PostAsync("http://requestb.in/16xkewg1", content);
 
-                result.EnsureSuccessStatusCode();
+                //result.EnsureSuccessStatusCode();
             });
-            */
         }
 
         CancellationTokenSource currentToken;
@@ -47,7 +45,8 @@ namespace Playground.iOS
 
             st.Start();
             try {
-                var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
+                var url = "https://www.twitter.com";
+                //var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
                 //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
 
                 resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
