@@ -59,5 +59,8 @@
       <Link>AsyncLock.cs</Link>
     </Compile>
     <Compile Include="NSUrlSessionHandler.cs" />
+    <Reference Include="CocoaSPDY-Xamarin">
+      <HintPath>..\..\ext\monotouch\CocoaSPDY-Xamarin.dll</HintPath>
+    </Reference>
   </ItemGroup>
 </Project>

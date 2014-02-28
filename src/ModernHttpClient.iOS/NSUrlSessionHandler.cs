@@ -3,10 +3,12 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
 using MonoTouch.Foundation;
+using MonoTouch.ObjCRuntime;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using CocoaSpdy;
 
 namespace ModernHttpClient
 {
@@ -32,9 +34,11 @@ namespace ModernHttpClient
 
         public NSUrlSessionHandler()
         {
-            session = NSUrlSession.FromConfiguration(
-                NSUrlSessionConfiguration.DefaultSessionConfiguration, 
-                new DataTaskDelegate(this), null);
+            var protoClasses = NSArray.FromIntPtrs(new[] { Class.GetHandle(typeof(SPDYProtocol)) });
+            var config = NSUrlSessionConfiguration.DefaultSessionConfiguration;
+            config.WeakProtocolClasses = protoClasses;
+
+            session = NSUrlSession.FromConfiguration(config, new DataTaskDelegate(this), null);
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
