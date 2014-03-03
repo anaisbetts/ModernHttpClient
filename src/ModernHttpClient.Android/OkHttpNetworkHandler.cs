@@ -48,8 +48,14 @@ namespace ModernHttpClient
             }
 
             return await Task.Run (() => {
+                var ret = default(HttpResponseMessage);
+
                 // NB: This is the line that blocks until we have headers
-                var ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
+                try {
+                    ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
+                } catch(Java.Net.UnknownHostException e) {
+                    throw new WebException("Name resolution failure", e, WebExceptionStatus.NameResolutionFailure, null);
+                }
 
                 // Test to see if we're being redirected (i.e. in a captive network)
                 if (throwOnCaptiveNetwork && (url.Host != rq.URL.Host)) {
