@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 
 namespace ModernHttpClient
 {
@@ -37,8 +38,48 @@ namespace ModernHttpClient
                 new DataTaskDelegate(this), null);
         }
 
+        public CookieContainer CookieContainer { get; set; }
+
+		void setNSCookies()
+        {
+            if (CookieContainer == null)
+                return;
+
+			var nsCookies = NSHttpCookieStorage.SharedStorage.Cookies.ToList ();
+			nsCookies.ForEach (c => NSHttpCookieStorage.SharedStorage.DeleteCookie (c));
+
+            var cookies = GetPrivateValue<CookieCollection> (CookieContainer, "cookies");
+			foreach(Cookie c in cookies){
+				NSHttpCookieStorage.SharedStorage.SetCookie (new NSHttpCookie (c));
+			}
+		}
+
+		void setCookieContainerCookes()
+		{
+            if (CookieContainer == null)
+				return;
+
+			NSHttpCookieStorage.SharedStorage.Cookies.ToList().ForEach(x=>
+				{
+					var cookie = new Cookie(x.Name,x.Value,x.Path,x.Domain);
+					if(x.ExpiresDate != null)
+						cookie.Expires = x.ExpiresDate;
+                    CookieContainer.Add(cookie);
+				});
+		}
+
+		public static T GetPrivateValue<T> (object instance, string fieldName)
+		{
+			var type = instance.GetType ();
+			var bindFlags = BindingFlags.Instance | BindingFlags.Public | BindingFlags.NonPublic | BindingFlags.Static;
+			var field = type.GetField(fieldName, bindFlags);
+			return (T)field.GetValue(instance);
+		}
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            setNSCookies();
+
             var headers = request.Headers as IEnumerable<KeyValuePair<string, IEnumerable<string>>>;
             var ms = new MemoryStream();
 
@@ -76,7 +117,9 @@ namespace ModernHttpClient
             }
 
             op.Resume();
-            return await ret.Task;
+			var returnData = await ret.Task;
+			setCookieContainerCookes ();
+			return returnData;
         }
 
         class DataTaskDelegate : NSUrlSessionDataDelegate
