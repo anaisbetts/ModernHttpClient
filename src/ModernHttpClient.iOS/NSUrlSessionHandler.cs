@@ -38,26 +38,17 @@ namespace ModernHttpClient
                 new DataTaskDelegate(this), null);
         }
 
-		CookieContainer cookieContainer;
-		public CookieContainer CookieContainer {
-			get {
-				return cookieContainer;
-			}
-			set {
-				cookieContainer = value;
-				setNSCookies ();
-			}
-		}
+        public CookieContainer CookieContainer { get; set; }
 
 		void setNSCookies()
-		{
+        {
+            if (CookieContainer == null)
+                return;
+
 			var nsCookies = NSHttpCookieStorage.SharedStorage.Cookies.ToList ();
 			nsCookies.ForEach (c => NSHttpCookieStorage.SharedStorage.DeleteCookie (c));
 
-			if (cookieContainer == null)
-				return;
-
-			var cookies = GetPrivateValue<CookieCollection> (cookieContainer, "cookies");
+            var cookies = GetPrivateValue<CookieCollection> (CookieContainer, "cookies");
 			foreach(Cookie c in cookies){
 				NSHttpCookieStorage.SharedStorage.SetCookie (new NSHttpCookie (c));
 			}
@@ -65,7 +56,7 @@ namespace ModernHttpClient
 
 		void setCookieContainerCookes()
 		{
-			if (cookieContainer == null)
+            if (CookieContainer == null)
 				return;
 
 			NSHttpCookieStorage.SharedStorage.Cookies.ToList().ForEach(x=>
@@ -73,7 +64,7 @@ namespace ModernHttpClient
 					var cookie = new Cookie(x.Name,x.Value,x.Path,x.Domain);
 					if(x.ExpiresDate != null)
 						cookie.Expires = x.ExpiresDate;
-					cookieContainer.Add(cookie);
+                    CookieContainer.Add(cookie);
 				});
 		}
 
@@ -87,6 +78,8 @@ namespace ModernHttpClient
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            setNSCookies();
+
             var headers = request.Headers as IEnumerable<KeyValuePair<string, IEnumerable<string>>>;
             var ms = new MemoryStream();
 
