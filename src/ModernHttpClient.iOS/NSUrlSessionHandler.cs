@@ -76,7 +76,7 @@ namespace ModernHttpClient
             }
 
             op.Resume();
-            return await ret.Task;
+            return await ret.Task.ConfigureAwait(false);
         }
 
         class DataTaskDelegate : NSUrlSessionDataDelegate
@@ -255,7 +255,7 @@ namespace ModernHttpClient
 
             if (exception != null) throw exception;
 
-            using (await readStreamLock.LockAsync()) {
+            using (await readStreamLock.LockAsync().ConfigureAwait(false)) {
                 lock (bytes) {
                     foreach (var buf in bytes) {
                         cancellationToken.ThrowIfCancellationRequested();
@@ -292,7 +292,7 @@ namespace ModernHttpClient
             // the next read to park itself unless AddByteArray or Complete 
             // posts
             if (position >= maxLength && !isCompleted) {
-                lockRelease = await readStreamLock.LockAsync();
+                lockRelease = await readStreamLock.LockAsync().ConfigureAwait(false);
             }
 
             if (bytesRead == 0 && !isCompleted) {
