@@ -76,7 +76,7 @@ namespace ModernHttpClient
             }
 
             op.Resume();
-            return await ret.Task;
+            return await ret.Task.ConfigureAwait(false);
         }
 
         class DataTaskDelegate : NSUrlSessionDataDelegate
@@ -255,7 +255,7 @@ namespace ModernHttpClient
 
             if (exception != null) throw exception;
 
-            using (await readStreamLock.LockAsync()) {
+            using (await readStreamLock.LockAsync().ConfigureAwait(false)) {
                 lock (bytes) {
                     foreach (var buf in bytes) {
                         cancellationToken.ThrowIfCancellationRequested();
@@ -279,10 +279,7 @@ namespace ModernHttpClient
                     }
 
                     // Remove buffers that we read in this operation
-                    while (buffersToRemove > 0) {
-                        bytes.RemoveAt(0);
-                        buffersToRemove--;
-                    }
+                    bytes.RemoveRange(0, buffersToRemove);
 
                     position += bytesRead;
                 }
@@ -292,7 +289,7 @@ namespace ModernHttpClient
             // the next read to park itself unless AddByteArray or Complete 
             // posts
             if (position >= maxLength && !isCompleted) {
-                lockRelease = await readStreamLock.LockAsync();
+                lockRelease = await readStreamLock.LockAsync().ConfigureAwait(false);
             }
 
             if (bytesRead == 0 && !isCompleted) {
@@ -310,6 +307,21 @@ namespace ModernHttpClient
             if (exception != null) {
                 Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
                 throw exception;
+            }
+
+            if (isCompleted && position < maxLength) {
+                // NB: This solves a rare deadlock 
+		//
+                // 1. ReadAsync called (waiting for lock release)
+                // 2. AddByteArray called (release lock)
+                // 3. AddByteArray called (release lock)
+                // 4. Complete called (release lock the last time)
+		// 5. ReadAsync called (lock released at this point, the method completed successfully) 
+		// 6. ReadAsync called (deadlock on LockAsync(), because the lock is block, and there is no way to release it)
+                // 
+                // Current condition forces the lock to be released in the end of 5th point
+
+                Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
             }
 
             return bytesRead;
