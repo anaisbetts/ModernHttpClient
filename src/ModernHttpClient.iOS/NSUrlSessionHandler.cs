@@ -309,6 +309,22 @@ namespace ModernHttpClient
                 throw exception;
             }
 
+            if (isCompleted && position < maxLength) {
+                // Fix of deadlock
+                // -----
+                // Deadlock description (quite rare case):
+                // 1. ReadAsync called (waiting for lock release)
+                // 2. AddByteArray called (release lock)
+                // 3. AddByteArray called (release lock)
+                // 4. Complete called (release lock the last time)
+                // 5. ReadAsync called (lock released at this point, the method completed successfully) 
+                // 6. ReadAsync called (deadlock on LockAsync(), because the lock is block, and there is no way to release it)
+                // --
+                // Current condition forces the lock to be released in the end of 5th point
+
+                Interlocked.Exchange(ref lockRelease, EmptyDisposable.Instance).Dispose();
+            }
+
             return bytesRead;
         }
 
