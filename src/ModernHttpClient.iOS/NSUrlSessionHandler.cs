@@ -279,10 +279,7 @@ namespace ModernHttpClient
                     }
 
                     // Remove buffers that we read in this operation
-                    while (buffersToRemove > 0) {
-                        bytes.RemoveAt(0);
-                        buffersToRemove--;
-                    }
+                    bytes.RemoveRange(0, buffersToRemove);
 
                     position += bytesRead;
                 }
