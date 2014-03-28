@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 name: ModernHttpClient
-version: 1.2.1
+version: 1.2.2
 id: "modernhttpclient"
 publisher: Paul Betts
 publisher-url: http://blog.paulbetts.org/
