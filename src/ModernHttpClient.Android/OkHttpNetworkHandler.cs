@@ -6,6 +6,8 @@ using System.Linq;
 using System.IO;
 using System.Net;
 using System.Net.Http;
+using Java.Security;
+using Javax.Net.Ssl;
 using OkHttp;
 
 namespace ModernHttpClient
@@ -15,11 +17,25 @@ namespace ModernHttpClient
         readonly OkHttpClient client = new OkHttpClient();
         readonly bool throwOnCaptiveNetwork;
 
-        public OkHttpNetworkHandler() : this(false) {}
-
+        public OkHttpNetworkHandler() : this(false) {
+            SetupSSLContext();
+        }
         public OkHttpNetworkHandler(bool throwOnCaptiveNetwork)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+            SetupSSLContext();
+        }
+        
+        private void SetupSSLContext() {
+            //without this code, using the google analytics library will cause fatal SIGSEGVs
+            //https://github.com/square/okhttp/issues/184
+            try {
+                var ssl = SSLContext.GetInstance("TLS");
+                ssl.Init(null, null, null);
+                client.SetSslSocketFactory(ssl.SocketFactory);
+            } catch (GeneralSecurityException e) {
+                // The system has no TLS. Just give up.
+            }
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
