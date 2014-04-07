@@ -7,9 +7,16 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using MonoTouch.Security;
 
 namespace ModernHttpClient
 {
+    public enum CertificateVerification
+    {
+        Normal = 0,
+        DisableVerificationSolelyForDevelopmentAndIPromiseNotToShipThisSoftwareToAnyone = 42,
+    }
+
     // NB: This class is only here so we don't break backwards compatibility
     [Obsolete("AFNetworkHandler is no longer supported, please change to NSUrlSessionHandler", error: false)]
     public class AFNetworkHandler : NSUrlSessionHandler {}
@@ -26,12 +33,16 @@ namespace ModernHttpClient
     public class NSUrlSessionHandler : HttpMessageHandler
     {
         readonly NSUrlSession session;
+        readonly CertificateVerification certVerification;
 
         readonly Dictionary<NSUrlSessionTask, InflightOperation> inflightRequests = 
             new Dictionary<NSUrlSessionTask, InflightOperation>();
 
-        public NSUrlSessionHandler()
+        public NSUrlSessionHandler() : this(CertificateVerification.Normal) {}
+
+        public NSUrlSessionHandler(CertificateVerification certVerification)
         {
+            this.certVerification = certVerification;
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
                 new DataTaskDelegate(this), null);
@@ -86,6 +97,26 @@ namespace ModernHttpClient
             public DataTaskDelegate(NSUrlSessionHandler that)
             {
                 this.This = that;
+            }
+
+            public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
+            {
+                if (This.certVerification == CertificateVerification.Normal ||
+                        challenge.ProtectionSpace == null ||
+                        challenge.ProtectionSpace.AuthenticationMethod != "NSURLAuthenticationMethodServerTrust") {
+
+                    // XXX: This throws ArgumentNullException, but according to Apple 
+                    // Docs, this is how you indicate you want default result: "For 
+                    // other challenges, the ones that you don't care about, call the 
+                    // completion handler block with the 
+                    // NSURLSessionAuthChallengePerformDefaultHandling disposition and 
+                    // a NULL credential."
+                    // https://developer.apple.com/library/ios/technotes/tn2232/_index.html#//apple_ref/doc/uid/DTS40012884-CH1-SECNSURLSESSION
+                    completionHandler(NSUrlSessionAuthChallengeDisposition.PerformDefaultHandling, new NSUrlCredential(IntPtr.Zero, true));
+                }
+
+                Console.WriteLine("Performing INSECURE request to {0}", task.CurrentRequest.Url.AbsoluteString);
+                completionHandler(NSUrlSessionAuthChallengeDisposition.UseCredential, NSUrlCredential.FromTrust(challenge.ProtectionSpace.ServerTrust));
             }
 
             public override void DidReceiveResponse(NSUrlSession session, NSUrlSessionDataTask dataTask, NSUrlResponse response, Action<NSUrlSessionResponseDisposition> completionHandler)
