@@ -55,6 +55,8 @@ namespace ModernHttpClient
                     ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
                 } catch(Java.Net.UnknownHostException e) {
                     throw new WebException("Name resolution failure", e, WebExceptionStatus.NameResolutionFailure, null);
+                } catch(Java.Net.ConnectException e) {
+                    throw new WebException("Connection failed", e, WebExceptionStatus.ConnectFailure, null);
                 }
 
                 // Test to see if we're being redirected (i.e. in a captive network)
