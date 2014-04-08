@@ -112,7 +112,7 @@ namespace ModernHttpClient
                     // NSURLSessionAuthChallengePerformDefaultHandling disposition and 
                     // a NULL credential."
                     // https://developer.apple.com/library/ios/technotes/tn2232/_index.html#//apple_ref/doc/uid/DTS40012884-CH1-SECNSURLSESSION
-                    completionHandler(NSUrlSessionAuthChallengeDisposition.PerformDefaultHandling, new NSUrlCredential(IntPtr.Zero, true));
+                    completionHandler(NSUrlSessionAuthChallengeDisposition.PerformDefaultHandling, null);
                 }
 
                 Console.WriteLine("Performing INSECURE request to {0}", task.CurrentRequest.Url.AbsoluteString);
