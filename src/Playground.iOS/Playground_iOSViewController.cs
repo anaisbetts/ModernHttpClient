@@ -47,7 +47,10 @@ namespace Playground.iOS
 
             st.Start();
             try {
-                var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
+                // Self-signed cert
+                var url = "https://www.pcwebshop.co.uk/wp-content/uploads/2012/01/banner1.jpg";
+
+                //var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
                 //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
 
                 resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
