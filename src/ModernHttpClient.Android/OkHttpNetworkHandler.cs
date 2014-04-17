@@ -88,14 +88,14 @@ namespace ModernHttpClient
             }, cancellationToken).ConfigureAwait(false);
         }
 
-        async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
+        async Task copyToAsync(Stream source, Stream target, CancellationToken cancellationToken)
         {
             await Task.Run(async () => {
                 var buf = new byte[4096];
                 var read = 0;
 
                 do {
-                    read = await source.ReadAsync(buf, 0, 4096).ConfigureAwait(false);
+                    read = await source.ReadAsync(buf, 0, 4096, cancellationToken).ConfigureAwait(false);
 
                     if (read > 0) {
                         target.Write(buf, 0, read);
