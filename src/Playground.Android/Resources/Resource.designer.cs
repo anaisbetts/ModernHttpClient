@@ -67,11 +67,14 @@ namespace Playground.Android
 			// aapt resource value: 0x7f050000
 			public const int doIt = 2131034112;
 			
+			// aapt resource value: 0x7f050004
+			public const int md5sum = 2131034116;
+			
 			// aapt resource value: 0x7f050003
-			public const int md5sum = 2131034115;
+			public const int result = 2131034115;
 			
 			// aapt resource value: 0x7f050002
-			public const int result = 2131034114;
+			public const int status = 2131034114;
 			
 			static Id()
 			{

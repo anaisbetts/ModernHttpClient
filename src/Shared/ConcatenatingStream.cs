@@ -86,13 +86,13 @@ namespace ModernHttpClient
                 if (stream == null) break;
 
                 var thisCount = default(int);
-                #if UIKIT
+#if UIKIT
                 using (await readLock.LockAsync()) {
-                    thisCount = await stream.ReadAsync(buffer, offset, count);
+                    thisCount = await stream.ReadAsync(buffer, offset, count, cancellationToken);
                 }
-                #else
-                thisCount = await stream.ReadAsync(buffer, offset, count);
-                #endif
+#else
+                thisCount = await stream.ReadAsync(buffer, offset, count, cancellationToken);
+#endif
 
                 result += thisCount;
                 count -= thisCount;

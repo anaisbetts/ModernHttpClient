@@ -95,10 +95,10 @@ namespace ModernHttpClient
                 var read = 0;
 
                 do {
-                    read = await source.ReadAsync(buf, 0, 4096).ConfigureAwait(false);
+                    read = await source.ReadAsync(buf, 0, 4096, ct).ConfigureAwait(false);
 
                     if (read > 0) {
-                        target.Write(buf, 0, read);
+                        await target.WriteAsync(buf, 0, read, ct).ConfigureAwait(false);
                     }
                 } while (!ct.IsCancellationRequested && read > 0);
 
