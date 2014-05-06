@@ -307,13 +307,13 @@ namespace ModernHttpClient
 
             if (isCompleted && position < maxLength) {
                 // NB: This solves a rare deadlock 
-		//
+                //
                 // 1. ReadAsync called (waiting for lock release)
                 // 2. AddByteArray called (release lock)
                 // 3. AddByteArray called (release lock)
                 // 4. Complete called (release lock the last time)
-		// 5. ReadAsync called (lock released at this point, the method completed successfully) 
-		// 6. ReadAsync called (deadlock on LockAsync(), because the lock is block, and there is no way to release it)
+                // 5. ReadAsync called (lock released at this point, the method completed successfully) 
+                // 6. ReadAsync called (deadlock on LockAsync(), because the lock is block, and there is no way to release it)
                 // 
                 // Current condition forces the lock to be released in the end of 5th point
 
