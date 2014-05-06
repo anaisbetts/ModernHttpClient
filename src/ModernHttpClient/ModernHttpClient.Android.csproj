@@ -14,14 +14,15 @@
     <MonoAndroidResourcePrefix>Resources</MonoAndroidResourcePrefix>
     <MonoAndroidAssetsPrefix>Assets</MonoAndroidAssetsPrefix>
     <AndroidUseLatestPlatformSdk>False</AndroidUseLatestPlatformSdk>
-    <AssemblyName>ModernHttpClient.Android</AssemblyName>
+    <AssemblyName>ModernHttpClient</AssemblyName>
     <TargetFrameworkVersion>v2.3</TargetFrameworkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>bin\Debug\MonoAndroid</OutputPath>
+    <IntermediateOutputPath>obj\Debug\MonoAndroid</IntermediateOutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -36,7 +37,8 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
+    <OutputPath>bin\Release\MonoAndroid</OutputPath>
+    <IntermediateOutputPath>obj\Release\MonoAndroid</IntermediateOutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <AndroidUseSharedRuntime>false</AndroidUseSharedRuntime>
@@ -57,14 +59,13 @@
       <HintPath>..\..\vendor\okhttp\OkHttp.dll</HintPath>
     </Reference>
     <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="OkHttpNetworkHandler.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Android\OkHttpNetworkHandler.cs" />
     <None Include="Resources\AboutResources.txt" />
     <AndroidResource Include="Resources\values\Strings.xml" />
+    <Folder Include="Android\Properties\" />
+    <Compile Include="Android\ConcatenatingStream.cs" />
     <Folder Include="Properties\" />
-    <Compile Include="..\Shared\ConcatenatingStream.cs">
-      <Link>ConcatenatingStream.cs</Link>
-    </Compile>
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>

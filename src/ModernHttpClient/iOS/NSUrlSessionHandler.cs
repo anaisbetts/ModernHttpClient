@@ -10,10 +10,6 @@ using System.Net;
 
 namespace ModernHttpClient
 {
-    // NB: This class is only here so we don't break backwards compatibility
-    [Obsolete("AFNetworkHandler is no longer supported, please change to NSUrlSessionHandler", error: false)]
-    public class AFNetworkHandler : NSUrlSessionHandler {}
-
     class InflightOperation
     {
         public HttpRequestMessage Request { get; set; }
@@ -23,14 +19,14 @@ namespace ModernHttpClient
         public bool IsCompleted { get; set; }
     }
 
-    public class NSUrlSessionHandler : HttpMessageHandler
+    public class NativeMessageHandler : HttpMessageHandler
     {
         readonly NSUrlSession session;
 
         readonly Dictionary<NSUrlSessionTask, InflightOperation> inflightRequests = 
             new Dictionary<NSUrlSessionTask, InflightOperation>();
 
-        public NSUrlSessionHandler()
+        public NativeMessageHandler()
         {
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
@@ -81,9 +77,9 @@ namespace ModernHttpClient
 
         class DataTaskDelegate : NSUrlSessionDataDelegate
         {
-            NSUrlSessionHandler This { get; set; }
+            NativeMessageHandler This { get; set; }
 
-            public DataTaskDelegate(NSUrlSessionHandler that)
+            public DataTaskDelegate(NativeMessageHandler that)
             {
                 this.This = that;
             }
@@ -311,13 +307,13 @@ namespace ModernHttpClient
 
             if (isCompleted && position < maxLength) {
                 // NB: This solves a rare deadlock 
-		//
+                //
                 // 1. ReadAsync called (waiting for lock release)
                 // 2. AddByteArray called (release lock)
                 // 3. AddByteArray called (release lock)
                 // 4. Complete called (release lock the last time)
-		// 5. ReadAsync called (lock released at this point, the method completed successfully) 
-		// 6. ReadAsync called (deadlock on LockAsync(), because the lock is block, and there is no way to release it)
+                // 5. ReadAsync called (lock released at this point, the method completed successfully) 
+                // 6. ReadAsync called (deadlock on LockAsync(), because the lock is block, and there is no way to release it)
                 // 
                 // Current condition forces the lock to be released in the end of 5th point
 

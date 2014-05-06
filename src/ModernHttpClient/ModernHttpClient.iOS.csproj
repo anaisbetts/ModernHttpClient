@@ -10,13 +10,14 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ModernHttpClient</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <AssemblyName>ModernHttpClient.iOS</AssemblyName>
+    <AssemblyName>ModernHttpClient</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug</OutputPath>
+    <OutputPath>bin\Debug\Monotouch</OutputPath>
+    <IntermediateOutputPath>obj\Debug\Monotouch</IntermediateOutputPath>
     <DefineConstants>DEBUG; UIKIT</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -30,7 +31,8 @@
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release</OutputPath>
+    <OutputPath>bin\Release\Monotouch</OutputPath>
+    <IntermediateOutputPath>obj\Release\Monotouch</IntermediateOutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
@@ -49,12 +51,11 @@
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
     <Reference Include="System.Net.Http" />
-    <Folder Include="Resources\" />
-    <Folder Include="Properties\" />
+    <Compile Include="iOS\NSUrlSessionHandler.cs" />
+    <Compile Include="iOS\AsyncLock.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="NSUrlSessionHandler.cs" />
-    <Compile Include="..\Shared\AsyncLock.cs">
-      <Link>AsyncLock.cs</Link>
-    </Compile>
+  </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Properties\" />
   </ItemGroup>
 </Project>

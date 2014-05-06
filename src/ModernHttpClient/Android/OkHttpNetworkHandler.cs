@@ -10,14 +10,14 @@ using OkHttp;
 
 namespace ModernHttpClient
 {
-    public class OkHttpNetworkHandler : HttpMessageHandler
+    public class NativeMessageHandler : HttpMessageHandler
     {
         readonly OkHttpClient client = new OkHttpClient();
         readonly bool throwOnCaptiveNetwork;
 
-        public OkHttpNetworkHandler() : this(false) {}
+        public NativeMessageHandler() : this(false) {}
 
-        public OkHttpNetworkHandler(bool throwOnCaptiveNetwork)
+        public NativeMessageHandler(bool throwOnCaptiveNetwork)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
         }

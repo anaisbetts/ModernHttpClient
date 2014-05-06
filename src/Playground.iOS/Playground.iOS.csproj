@@ -111,7 +111,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildBinPath)\Microsoft.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\ModernHttpClient.iOS\ModernHttpClient.iOS.csproj">
+    <ProjectReference Include="..\ModernHttpClient\ModernHttpClient.iOS.csproj">
       <Project>{0F2A1CC8-4168-4CB4-B334-28C28BA51ECB}</Project>
       <Name>ModernHttpClient.iOS</Name>
     </ProjectReference>
