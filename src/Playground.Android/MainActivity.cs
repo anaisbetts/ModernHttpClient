@@ -45,7 +45,7 @@ namespace Playground.Android
             };
 
             button.Click += async (o, e) => {
-                var client = new HttpClient(new OkHttpNetworkHandler());
+                var client = new HttpClient(new NativeMessageHandler());
                 currentToken = new CancellationTokenSource();
                 var st = new Stopwatch();
 

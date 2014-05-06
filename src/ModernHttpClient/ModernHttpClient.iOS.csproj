@@ -54,6 +54,6 @@
     <Folder Include="iOS\Properties\" />
     <Compile Include="iOS\Properties\AssemblyInfo.cs" />
     <Compile Include="iOS\NSUrlSessionHandler.cs" />
-    <Compile Include="AsyncLock.cs" />
+    <Compile Include="iOS\AsyncLock.cs" />
   </ItemGroup>
 </Project>

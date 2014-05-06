@@ -41,7 +41,7 @@ namespace Playground.iOS
 
         async partial void doIt (MonoTouch.Foundation.NSObject sender)
         {
-            var client = new HttpClient(new NSUrlSessionHandler());
+            var client = new HttpClient(new NativeMessageHandler());
             currentToken = new CancellationTokenSource();
             var st = new Stopwatch();
 

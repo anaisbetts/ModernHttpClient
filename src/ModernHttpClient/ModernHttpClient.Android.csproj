@@ -63,8 +63,8 @@
     <Compile Include="Android\Properties\AssemblyInfo.cs" />
     <None Include="Resources\AboutResources.txt" />
     <AndroidResource Include="Resources\values\Strings.xml" />
-    <Compile Include="ConcatenatingStream.cs" />
     <Folder Include="Android\Properties\" />
+    <Compile Include="Android\ConcatenatingStream.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
