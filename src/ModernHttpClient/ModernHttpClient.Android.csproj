@@ -58,15 +58,13 @@
     <Reference Include="OkHttp">
       <HintPath>..\..\vendor\okhttp\OkHttp.dll</HintPath>
     </Reference>
-    <Compile Include="Resources\Resource.designer.cs" />
-    <Compile Include="OkHttpNetworkHandler.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Android\Resources\Resource.designer.cs" />
+    <Compile Include="Android\OkHttpNetworkHandler.cs" />
+    <Compile Include="Android\Properties\AssemblyInfo.cs" />
     <None Include="Resources\AboutResources.txt" />
     <AndroidResource Include="Resources\values\Strings.xml" />
-    <Folder Include="Properties\" />
-    <Compile Include="..\Shared\ConcatenatingStream.cs">
-      <Link>ConcatenatingStream.cs</Link>
-    </Compile>
+    <Compile Include="ConcatenatingStream.cs" />
+    <Folder Include="Android\Properties\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
