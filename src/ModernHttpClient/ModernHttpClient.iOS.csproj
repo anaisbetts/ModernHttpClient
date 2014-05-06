@@ -51,9 +51,9 @@
     <Reference Include="System.Core" />
     <Reference Include="monotouch" />
     <Reference Include="System.Net.Http" />
-    <Folder Include="Cocoa\Properties\" />
-    <Compile Include="Cocoa\Properties\AssemblyInfo.cs" />
-    <Compile Include="Cocoa\NSUrlSessionHandler.cs" />
+    <Folder Include="iOS\Properties\" />
+    <Compile Include="iOS\Properties\AssemblyInfo.cs" />
+    <Compile Include="iOS\NSUrlSessionHandler.cs" />
     <Compile Include="AsyncLock.cs" />
   </ItemGroup>
 </Project>

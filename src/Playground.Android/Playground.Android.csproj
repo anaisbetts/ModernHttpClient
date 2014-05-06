@@ -3,7 +3,7 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProductVersion>10.0.0</ProductVersion>
+    <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
     <ProjectGuid>{90F8D67C-8D81-4DCE-BAE7-1ABA136A4C60}</ProjectGuid>
     <ProjectTypeGuids>{EFBA0AD7-5A72-4C68-AF49-83D382785DCF};{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}</ProjectTypeGuids>
@@ -77,7 +77,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\ModernHttpClient.Android\ModernHttpClient.Android.csproj">
+    <ProjectReference Include="..\ModernHttpClient\ModernHttpClient.Android.csproj">
       <Project>{F7290B9E-C821-4DA7-A4E5-824D9B0F70F2}</Project>
       <Name>ModernHttpClient.Android</Name>
     </ProjectReference>

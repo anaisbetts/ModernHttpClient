@@ -58,7 +58,7 @@
     <Reference Include="OkHttp">
       <HintPath>..\..\vendor\okhttp\OkHttp.dll</HintPath>
     </Reference>
-    <Compile Include="Android\Resources\Resource.designer.cs" />
+    <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Android\OkHttpNetworkHandler.cs" />
     <Compile Include="Android\Properties\AssemblyInfo.cs" />
     <None Include="Resources\AboutResources.txt" />
