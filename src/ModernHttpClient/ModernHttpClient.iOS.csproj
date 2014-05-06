@@ -10,7 +10,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ModernHttpClient</RootNamespace>
     <IPhoneResourcePrefix>Resources</IPhoneResourcePrefix>
-    <AssemblyName>ModernHttpClient.iOS</AssemblyName>
+    <AssemblyName>ModernHttpClient</AssemblyName>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
     <DebugSymbols>true</DebugSymbols>
