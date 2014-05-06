@@ -17,7 +17,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid</OutputPath>
+    <OutputPath>bin\Debug\Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid\</OutputPath>
     <IntermediateOutputPath>obj\Debug\Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid</IntermediateOutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -27,7 +27,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid</OutputPath>
+    <OutputPath>bin\Release\Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid\</OutputPath>
     <IntermediateOutputPath>obj\Release\Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid</IntermediateOutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>

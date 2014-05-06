@@ -60,11 +60,12 @@
     </Reference>
     <Compile Include="Resources\Resource.designer.cs" />
     <Compile Include="Android\OkHttpNetworkHandler.cs" />
-    <Compile Include="Android\Properties\AssemblyInfo.cs" />
     <None Include="Resources\AboutResources.txt" />
     <AndroidResource Include="Resources\values\Strings.xml" />
     <Folder Include="Android\Properties\" />
     <Compile Include="Android\ConcatenatingStream.cs" />
+    <Folder Include="Properties\" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
