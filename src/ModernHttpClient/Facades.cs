@@ -18,7 +18,13 @@ namespace ModernHttpClient.Portable
         }
     }
 
-    public class ProgressStreamContent : StreamContent {
+    public class ProgressStreamContent : StreamContent 
+    {
+        public ProgressDelegate Progress
+        {
+            get { throw new Exception("You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version"); }
+            set { throw new Exception("You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version"); }
+        }
     }
 
     public delegate void ProgressDelegate (long bytes, long totalBytes, long totalBytesExpected);
