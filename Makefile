@@ -13,8 +13,8 @@ vendor:
 	git submodule update --init --recursive
 
 OkHttp.dll: vendor
-	cd ./vendor/okhttp && make
-	cp ./vendor/okhttp/OkHttp.dll ./OkHttp.dll
+	$(MDTOOL) build -c:Release ./vendor/okhttp/OkHttp/OkHttp.csproj
+	cp ./vendor/okhttp/OkHttp/bin/Release/OkHttp.dll ./vendor/okhttp/OkHttp.dll
 
 ModernHttpClient.Android.dll: OkHttp.dll
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.Android.csproj
