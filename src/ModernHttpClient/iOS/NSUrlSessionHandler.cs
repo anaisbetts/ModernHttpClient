@@ -27,8 +27,8 @@ namespace ModernHttpClient
         readonly Dictionary<NSUrlSessionTask, InflightOperation> inflightRequests = 
             new Dictionary<NSUrlSessionTask, InflightOperation>();
 
-        readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks = 
-            new Dictionary<HttpRequestMessage, WeakReference>();
+        readonly Dictionary<HttpRequestMessage, ProgressDelegate> registeredProgressCallbacks = 
+            new Dictionary<HttpRequestMessage, ProgressDelegate>();
 
         public NativeMessageHandler()
         {
@@ -44,7 +44,7 @@ namespace ModernHttpClient
                 return;
             }
 
-            registeredProgressCallbacks[request] = new WeakReference(callback);
+            registeredProgressCallbacks[request] = callback;
         }
 
         ProgressDelegate getAndRemoveCallbackFromRegister(HttpRequestMessage request)
@@ -54,12 +54,13 @@ namespace ModernHttpClient
             lock (registeredProgressCallbacks) {
                 if (!registeredProgressCallbacks.ContainsKey(request)) return emptyDelegate;
 
-                var weakRef = registeredProgressCallbacks[request];
-                if (weakRef == null) return emptyDelegate;
+                //var weakRef = registeredProgressCallbacks[request];
+                //if (weakRef == null) return emptyDelegate;
 
-                var callback = weakRef.Target as ProgressDelegate;
-                if (callback == null) return emptyDelegate;
+                //var callback = weakRef.Target as ProgressDelegate;
+                //if (callback == null) return emptyDelegate;
 
+                var callback = registeredProgressCallbacks[request];
                 registeredProgressCallbacks.Remove(request);
                 return callback;
             }
