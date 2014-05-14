@@ -22,6 +22,16 @@ namespace ModernHttpClient
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
         }
 
+        private ProgressDelegate _downloadProgress;
+        public ProgressDelegate DownloadProgress
+        {
+            get { return _downloadProgress; }
+            set { 
+                if (value == null) _downloadProgress = delegate { };
+                else _downloadProgress = value;
+            }
+        }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var java_uri = request.RequestUri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
@@ -66,10 +76,13 @@ namespace ModernHttpClient
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                ret.Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
+                var progressStreamContent = new ProgressStreamContent(new ConcatenatingStream(new Func<Stream>[] {
                     () => ret.IsSuccessStatusCode ? rq.InputStream : new MemoryStream(),
                     () => rq.ErrorStream ?? new MemoryStream (),
                 }, true));
+
+                progressStreamContent.Progress = DownloadProgress;
+                ret.Content = progressStreamContent;
 
                 var keyValuePairs = rq.HeaderFields.Keys
                     .Where(k => k != null)      // Yes, this happens. I can't even. 

@@ -13,20 +13,21 @@ vendor:
 	git submodule update --init --recursive
 
 OkHttp.dll: vendor
-	$(MDTOOL) build -c:Release ./vendor/okhttp/OkHttp/OkHttp.csproj
-	cp ./vendor/okhttp/OkHttp/bin/Release/OkHttp.dll ./vendor/okhttp/OkHttp.dll
+	cd ./vendor/okhttp && make
+	cp ./vendor/okhttp/OkHttp.dll ./OkHttp.dll
 
 ModernHttpClient.Android.dll: OkHttp.dll
-	$(MDTOOL) build -c:Release ./src/ModernHttpClient.Android/ModernHttpClient.Android.csproj
+	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.Android.csproj
 	mkdir -p ./build/MonoAndroid
-	mv ./src/ModernHttpClient.Android/bin/Release/* ./build/MonoAndroid/
+	mv ./src/ModernHttpClient/bin/Release/MonoAndroid/* ./build/MonoAndroid
 
 ModernHttpClient.iOS.dll:
-	$(MDTOOL) build -c:Release ./src/ModernHttpClient.iOS/ModernHttpClient.iOS.csproj
+	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.iOS.csproj
 	mkdir -p ./build/MonoTouch
-	mv ./src/ModernHttpClient.iOS/bin/Release/* ./build/MonoTouch/
+	mv ./src/ModernHttpClient/bin/Release/MonoTouch/* ./build/MonoTouch
 
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
-	rm -rf vendor
+	rm *.dll
+	rm -rf vendor/okhttp
 	rm -rf build

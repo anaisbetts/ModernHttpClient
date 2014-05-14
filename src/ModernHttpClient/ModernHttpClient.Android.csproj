@@ -66,6 +66,7 @@
     <Compile Include="Android\ConcatenatingStream.cs" />
     <Folder Include="Properties\" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="ProgressHttpContent.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
