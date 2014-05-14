@@ -23,7 +23,6 @@ namespace ModernHttpClient
         public NativeMessageHandler(bool throwOnCaptiveNetwork)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
-            this.registeredProgressCallbacks = new Dictionary<HttpRequestMessage, WeakReference>();
         }
 
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)

@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.IO;
@@ -7,9 +7,8 @@ using System.Threading;
 
 namespace ModernHttpClient
 {
-    public delegate void ProgressDelegate (long bytes, long totalBytes, long totalBytesExpected);
 
-    public partial class ProgressStreamContent : StreamContent
+    public class ProgressStreamContent : StreamContent
     {
         public ProgressStreamContent(Stream stream)
             : this(new ProgressStream(stream))
@@ -172,4 +171,3 @@ namespace ModernHttpClient
         }
     }
 }
-
