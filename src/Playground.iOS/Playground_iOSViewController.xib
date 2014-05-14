@@ -7,6 +7,7 @@
         <placeholder placeholderIdentifier="IBFilesOwner" id="-1" userLabel="File's Owner" customClass="Playground_iOSViewController">
             <connections>
                 <outlet property="md5sum" destination="oAO-55-aHv" id="gyt-cK-S0z"/>
+                <outlet property="progress" destination="q1Z-EW-tmi" id="L1x-Cn-ue9"/>
                 <outlet property="result" destination="ti7-VA-fRn" id="taU-Nt-3rG"/>
                 <outlet property="view" destination="6" id="7"/>
             </connections>
