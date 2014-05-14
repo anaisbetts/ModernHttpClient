@@ -15,20 +15,45 @@ namespace ModernHttpClient
         readonly OkHttpClient client = new OkHttpClient();
         readonly bool throwOnCaptiveNetwork;
 
+        readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks = 
+            new Dictionary<HttpRequestMessage, WeakReference>();
+
         public NativeMessageHandler() : this(false) {}
 
         public NativeMessageHandler(bool throwOnCaptiveNetwork)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+            this.registeredProgressCallbacks = new Dictionary<HttpRequestMessage, WeakReference>();
         }
 
-        private ProgressDelegate _downloadProgress;
-        public ProgressDelegate DownloadProgress
+        public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
         {
-            get { return _downloadProgress; }
-            set { 
-                if (value == null) _downloadProgress = delegate { };
-                else _downloadProgress = value;
+            if (callback == null && registeredProgressCallbacks.ContainsKey(request)) {
+                registeredProgressCallbacks.Remove(request);
+                return;
+            }
+
+            registeredProgressCallbacks[request] = new WeakReference(callback);
+        }
+
+        private ProgressDelegate GetAndRemoveCallbackFromRegister(HttpRequestMessage request)
+        {
+            ProgressDelegate emptyDelegate = delegate { };
+
+            lock (registeredProgressCallbacks) {
+                if (!registeredProgressCallbacks.ContainsKey(request)) return emptyDelegate;
+
+                var weakRef = registeredProgressCallbacks[request];
+
+                if (weakRef == null) return emptyDelegate;
+
+                var callback = weakRef.Target as ProgressDelegate;
+
+                if (callback == null) return emptyDelegate;
+
+                registeredProgressCallbacks.Remove(request);
+
+                return callback;
             }
         }
 
@@ -81,7 +106,7 @@ namespace ModernHttpClient
                     () => rq.ErrorStream ?? new MemoryStream (),
                 }, true));
 
-                progressStreamContent.Progress = DownloadProgress;
+                progressStreamContent.Progress = GetAndRemoveCallbackFromRegister(request);
                 ret.Content = progressStreamContent;
 
                 var keyValuePairs = rq.HeaderFields.Keys
