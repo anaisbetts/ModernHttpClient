@@ -39,9 +39,21 @@ namespace Playground.iOS
             if (resp != null) resp.Content.Dispose();
         }
 
+        void HandleDownloadProgress(long bytes, long totalBytes, long totalBytesExpected)
+        {
+            Console.WriteLine("Downloading {0}/{1}", totalBytes, totalBytesExpected);
+
+            BeginInvokeOnMainThread(() => {
+                var progressPercent = (float)totalBytes / (float)totalBytesExpected;
+                progress.SetProgress(progressPercent, animated: true);
+            });
+        }
+
         async partial void doIt (MonoTouch.Foundation.NSObject sender)
         {
-            var client = new HttpClient(new NativeMessageHandler());
+            var handler = new NativeMessageHandler();
+            var client = new HttpClient(handler);
+
             currentToken = new CancellationTokenSource();
             var st = new Stopwatch();
 
@@ -50,7 +62,10 @@ namespace Playground.iOS
                 var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
                 //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
 
-                resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
+                var request = new HttpRequestMessage(HttpMethod.Get, url);
+                handler.RegisterForProgress(request, HandleDownloadProgress);
+
+                resp = await client.SendAsync(request, currentToken.Token);
                 result.Text = "Got the headers!";
 
                 Console.WriteLine("Headers");

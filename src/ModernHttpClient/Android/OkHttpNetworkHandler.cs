@@ -15,11 +15,42 @@ namespace ModernHttpClient
         readonly OkHttpClient client = new OkHttpClient();
         readonly bool throwOnCaptiveNetwork;
 
+        readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks = 
+            new Dictionary<HttpRequestMessage, WeakReference>();
+
         public NativeMessageHandler() : this(false) {}
 
         public NativeMessageHandler(bool throwOnCaptiveNetwork)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+        }
+
+        public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
+        {
+            if (callback == null && registeredProgressCallbacks.ContainsKey(request)) {
+                registeredProgressCallbacks.Remove(request);
+                return;
+            }
+
+            registeredProgressCallbacks[request] = new WeakReference(callback);
+        }
+
+        ProgressDelegate getAndRemoveCallbackFromRegister(HttpRequestMessage request)
+        {
+            ProgressDelegate emptyDelegate = delegate { };
+
+            lock (registeredProgressCallbacks) {
+                if (!registeredProgressCallbacks.ContainsKey(request)) return emptyDelegate;
+
+                var weakRef = registeredProgressCallbacks[request];
+                if (weakRef == null) return emptyDelegate;
+
+                var callback = weakRef.Target as ProgressDelegate;
+                if (callback == null) return emptyDelegate;
+
+                registeredProgressCallbacks.Remove(request);
+                return callback;
+            }
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -66,10 +97,13 @@ namespace ModernHttpClient
 
                 cancellationToken.ThrowIfCancellationRequested();
 
-                ret.Content = new StreamContent(new ConcatenatingStream(new Func<Stream>[] {
+                var progressStreamContent = new ProgressStreamContent(new ConcatenatingStream(new Func<Stream>[] {
                     () => ret.IsSuccessStatusCode ? rq.InputStream : new MemoryStream(),
                     () => rq.ErrorStream ?? new MemoryStream (),
                 }, true));
+
+                progressStreamContent.Progress = getAndRemoveCallbackFromRegister(request);
+                ret.Content = progressStreamContent;
 
                 var keyValuePairs = rq.HeaderFields.Keys
                     .Where(k => k != null)      // Yes, this happens. I can't even. 

@@ -70,6 +70,9 @@ namespace Playground.Android
 			// aapt resource value: 0x7f050004
 			public const int md5sum = 2131034116;
 			
+			// aapt resource value: 0x7f050005
+			public const int progress = 2131034117;
+			
 			// aapt resource value: 0x7f050003
 			public const int result = 2131034115;
 			

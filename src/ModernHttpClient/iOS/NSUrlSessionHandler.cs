@@ -14,6 +14,7 @@ namespace ModernHttpClient
     {
         public HttpRequestMessage Request { get; set; }
         public TaskCompletionSource<HttpResponseMessage> FutureResponse { get; set; }
+        public ProgressDelegate Progress { get; set; }
         public ByteArrayListStream ResponseBody { get; set; }
         public CancellationToken CancellationToken { get; set; }
         public bool IsCompleted { get; set; }
@@ -26,11 +27,43 @@ namespace ModernHttpClient
         readonly Dictionary<NSUrlSessionTask, InflightOperation> inflightRequests = 
             new Dictionary<NSUrlSessionTask, InflightOperation>();
 
+        readonly Dictionary<HttpRequestMessage, ProgressDelegate> registeredProgressCallbacks = 
+            new Dictionary<HttpRequestMessage, ProgressDelegate>();
+
         public NativeMessageHandler()
         {
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
                 new DataTaskDelegate(this), null);
+        }
+
+        public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
+        {
+            if (callback == null && registeredProgressCallbacks.ContainsKey(request)) {
+                registeredProgressCallbacks.Remove(request);
+                return;
+            }
+
+            registeredProgressCallbacks[request] = callback;
+        }
+
+        ProgressDelegate getAndRemoveCallbackFromRegister(HttpRequestMessage request)
+        {
+            ProgressDelegate emptyDelegate = delegate { };
+
+            lock (registeredProgressCallbacks) {
+                if (!registeredProgressCallbacks.ContainsKey(request)) return emptyDelegate;
+
+                //var weakRef = registeredProgressCallbacks[request];
+                //if (weakRef == null) return emptyDelegate;
+
+                //var callback = weakRef.Target as ProgressDelegate;
+                //if (callback == null) return emptyDelegate;
+
+                var callback = registeredProgressCallbacks[request];
+                registeredProgressCallbacks.Remove(request);
+                return callback;
+            }
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -66,6 +99,7 @@ namespace ModernHttpClient
                 inflightRequests[op] = new InflightOperation() {
                     FutureResponse = ret,
                     Request = request,
+                    Progress = getAndRemoveCallbackFromRegister(request),
                     ResponseBody = new ByteArrayListStream(),
                     CancellationToken = cancellationToken,
                 };
@@ -95,14 +129,18 @@ namespace ModernHttpClient
 
                     var resp = (NSHttpUrlResponse)response;
 
-                    var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
-                        Content = new CancellableStreamContent(data.ResponseBody, () => {
-                            //Console.WriteLine("Cancelling!");
-                            if (!data.IsCompleted) dataTask.Cancel();
-                            data.IsCompleted = true;
+                    var content = new CancellableStreamContent(data.ResponseBody, () => {
+                        //Console.WriteLine("Cancelling!");
+                        if (!data.IsCompleted) dataTask.Cancel();
+                        data.IsCompleted = true;
 
-                            data.ResponseBody.SetException(new OperationCanceledException());
-                        }),
+                        data.ResponseBody.SetException(new OperationCanceledException());
+                    });
+
+                    content.Progress = data.Progress;
+
+                    var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
+                        Content = content,
                         RequestMessage = data.Request,
                     };
 
@@ -350,7 +388,7 @@ namespace ModernHttpClient
         }
     }
 
-    sealed class CancellableStreamContent : StreamContent
+    sealed class CancellableStreamContent : ProgressStreamContent
     {
         Action onDispose;
 
