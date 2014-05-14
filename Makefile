@@ -8,11 +8,11 @@ package: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
 	mono vendor/nuget/NuGet.exe pack ./ModernHttpClient.nuspec
 	mv modernhttpclient*.nupkg ./build/
 
-vendor:
+submodule:
 	git submodule sync
 	git submodule update --init --recursive
 
-OkHttp.dll: vendor
+OkHttp.dll: submodule
 	$(MDTOOL) build -c:Release ./vendor/okhttp/OkHttp/OkHttp.csproj
 	cp ./vendor/okhttp/OkHttp/bin/Release/OkHttp.dll ./vendor/okhttp/OkHttp.dll
 
@@ -29,5 +29,4 @@ ModernHttpClient.iOS.dll:
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
 	rm *.dll
-	rm -rf vendor/okhttp
 	rm -rf build
