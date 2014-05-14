@@ -18,8 +18,9 @@ namespace ModernHttpClient.Portable
         }
     }
 
-    public class ProgressStreamContent : StreamContent {
+    public class ProgressStreamContent : StreamContent 
+    {
     }
 
-    public delegate void ProgressDelegate (long bytes, long totalBytes, long totalBytesExpected);
+    public delegate void ProgressDelegate(long bytes, long totalBytes, long totalBytesExpected);
 }

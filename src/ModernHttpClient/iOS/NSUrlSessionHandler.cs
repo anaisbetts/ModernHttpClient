@@ -47,7 +47,7 @@ namespace ModernHttpClient
             registeredProgressCallbacks[request] = new WeakReference(callback);
         }
 
-        private ProgressDelegate GetAndRemoveCallbackFromRegister(HttpRequestMessage request)
+        ProgressDelegate getAndRemoveCallbackFromRegister(HttpRequestMessage request)
         {
             ProgressDelegate emptyDelegate = delegate { };
 
@@ -55,15 +55,12 @@ namespace ModernHttpClient
                 if (!registeredProgressCallbacks.ContainsKey(request)) return emptyDelegate;
 
                 var weakRef = registeredProgressCallbacks[request];
-
                 if (weakRef == null) return emptyDelegate;
 
                 var callback = weakRef.Target as ProgressDelegate;
-
                 if (callback == null) return emptyDelegate;
 
                 registeredProgressCallbacks.Remove(request);
-
                 return callback;
             }
         }
@@ -101,7 +98,7 @@ namespace ModernHttpClient
                 inflightRequests[op] = new InflightOperation() {
                     FutureResponse = ret,
                     Request = request,
-                    Progress = GetAndRemoveCallbackFromRegister(request),
+                    Progress = getAndRemoveCallbackFromRegister(request),
                     ResponseBody = new ByteArrayListStream(),
                     CancellationToken = cancellationToken,
                 };

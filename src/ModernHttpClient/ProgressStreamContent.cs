@@ -20,47 +20,47 @@ namespace ModernHttpClient
         {
         }
 
-        private ProgressStreamContent(ProgressStream stream)
+        ProgressStreamContent(ProgressStream stream)
             : base(stream)
         {
-            Init(stream);
+            init(stream);
         }
 
-        private ProgressStreamContent(ProgressStream stream, int bufferSize)
+        ProgressStreamContent(ProgressStream stream, int bufferSize)
             : base(stream, bufferSize)
         {
-            Init(stream);
+            init(stream);
         }
 
-        private void Init(ProgressStream stream)
+        void init(ProgressStream stream)
         {
-            stream.ReadCallback = ReadBytes;
+            stream.ReadCallback = readBytes;
 
             Progress = delegate { };
         }
 
-        private void Reset()
+        void reset()
         {
             _totalBytes = 0L;
         }
 
-        private long _totalBytes;
-        private long _totalBytesExpected = -1;
+        long _totalBytes;
+        long _totalBytesExpected = -1;
 
-        private void ReadBytes(long bytes) 
+        void readBytes(long bytes) 
         {
             long computedLength;
             if (_totalBytesExpected == -1 && TryComputeLength(out computedLength)) 
                 _totalBytesExpected = computedLength;
 
-            // if less than zero still then change to -1
+            // If less than zero still then change to -1
             _totalBytesExpected = Math.Max(-1, _totalBytesExpected);
             _totalBytes += bytes;
 
             Progress(bytes, _totalBytes, _totalBytesExpected);
         }
 
-        private ProgressDelegate _progress;
+        ProgressDelegate _progress;
         public ProgressDelegate Progress
         {
             get { return _progress; }
@@ -72,7 +72,7 @@ namespace ModernHttpClient
 
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
         {
-            Reset();
+            reset();
             return base.SerializeToStreamAsync(stream, context);
         }
 
@@ -83,7 +83,7 @@ namespace ModernHttpClient
             return result;
         }
 
-        private class ProgressStream : Stream
+        class ProgressStream : Stream
         {
             public ProgressStream(Stream stream)
             {
@@ -119,8 +119,7 @@ namespace ModernHttpClient
                 return ParentStream.FlushAsync(cancellationToken);
             }
 
-            public override long Position
-            {
+            public override long Position {
                 get { return ParentStream.Position; }
                 set { ParentStream.Position = value; }
             }
@@ -151,6 +150,7 @@ namespace ModernHttpClient
             public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
                 var readCount = await ParentStream.ReadAsync(buffer, offset, count, cancellationToken);
+
                 ReadCallback(readCount);
                 return readCount;
             }
@@ -158,6 +158,7 @@ namespace ModernHttpClient
             public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
                 var task = ParentStream.WriteAsync(buffer, offset, count, cancellationToken);
+
                 WriteCallback(count);
                 return task;
             }
