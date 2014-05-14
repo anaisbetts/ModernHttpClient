@@ -9,6 +9,7 @@ namespace ModernHttpClient.Portable
     {
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
         {
+            throw new Exception("You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version");
         }
 
         protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
