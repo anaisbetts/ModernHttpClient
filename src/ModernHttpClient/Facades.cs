@@ -27,5 +27,5 @@ namespace ModernHttpClient.Portable
         }
     }
 
-    public delegate void ProgressDelegate (long bytes, long totalBytes, long totalBytesExpected);
+    public delegate void ProgressDelegate(long bytes, long totalBytes, long totalBytesExpected);
 }
