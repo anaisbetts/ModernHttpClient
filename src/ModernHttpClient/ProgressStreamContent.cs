@@ -49,9 +49,12 @@ namespace ModernHttpClient
 
         void readBytes(long bytes) 
         {
+            if (_totalBytesExpected == -1) 
+                _totalBytesExpected = Headers.ContentLength ?? -1;
+
             long computedLength;
             if (_totalBytesExpected == -1 && TryComputeLength(out computedLength)) 
-                _totalBytesExpected = computedLength;
+                _totalBytesExpected = computedLength == 0 ? -1 : computedLength;
 
             // If less than zero still then change to -1
             _totalBytesExpected = Math.Max(-1, _totalBytesExpected);
