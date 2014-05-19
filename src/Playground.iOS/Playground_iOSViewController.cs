@@ -59,13 +59,13 @@ namespace Playground.iOS
 
             st.Start();
             try {
-                var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
-                //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
+                //var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
+                var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
 
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
                 handler.RegisterForProgress(request, HandleDownloadProgress);
 
-                resp = await client.SendAsync(request, currentToken.Token);
+                resp = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                 result.Text = "Got the headers!";
 
                 Console.WriteLine("Headers");
