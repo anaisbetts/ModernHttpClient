@@ -2,9 +2,9 @@ MDTOOL ?= /Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool
 
 .PHONY: all clean
 
-all: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
+all: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll ModernHttpClient.Portable.dll
 
-package: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll
+package: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll ModernHttpClient.Portable.dll
 	mono vendor/nuget/NuGet.exe pack ./ModernHttpClient.nuspec
 	mv modernhttpclient*.nupkg ./build/
 
@@ -25,6 +25,11 @@ ModernHttpClient.iOS.dll:
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.iOS.csproj
 	mkdir -p ./build/MonoTouch
 	mv ./src/ModernHttpClient/bin/Release/MonoTouch/* ./build/MonoTouch
+
+ModernHttpClient.Portable.dll:
+	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.Portable.csproj
+	mkdir -p ./build/Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid
+	mv ./src/ModernHttpClient/bin/Release/Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid/* ./build/Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid
 
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
