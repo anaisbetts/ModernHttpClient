@@ -28,8 +28,8 @@ ModernHttpClient.iOS.dll:
 
 ModernHttpClient.Portable.dll:
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.Portable.csproj
-	mkdir -p ./build/Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid
-	mv ./src/ModernHttpClient/bin/Release/Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid/* ./build/Portable-Net45+NetCore45-WP80-MonoTouch-MonoAndroid
+	mkdir -p ./build/Portable-Net45+WinRT45+WP8+WPA81
+	mv ./src/ModernHttpClient/bin/Release/Portable-Net45+WinRT45+WP8+WPA81/* ./build/Portable-Net45+WinRT45+WP8+WPA81
 
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
