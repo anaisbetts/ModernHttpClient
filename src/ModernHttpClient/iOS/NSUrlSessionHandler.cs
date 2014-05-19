@@ -124,7 +124,6 @@ namespace ModernHttpClient
                     var resp = (NSHttpUrlResponse)response;
 
                     var content = new CancellableStreamContent(data.ResponseBody, () => {
-                        //Console.WriteLine("Cancelling!");
                         if (!data.IsCompleted) {
                             dataTask.Cancel();
                         }

@@ -67,7 +67,6 @@
     <Folder Include="Properties\" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProgressStreamContent.cs" />
-    <Compile Include="ProgressDelegate.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
