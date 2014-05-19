@@ -65,7 +65,7 @@
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Net.Http" />
     <Reference Include="ModernHttpClient.iOS">
-      <HintPath>..\..\build\MonoTouch\ModernHttpClient.iOS.dll</HintPath>
+      <HintPath>..\..\build\MonoTouch\ModernHttpClient.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

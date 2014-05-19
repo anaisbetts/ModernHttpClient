@@ -14,10 +14,10 @@ icons:
   - icon_512x512.png
 libraries: 
   ios: 
-    - ../build/MonoTouch/ModernHttpClient.iOS.dll
+    - ../build/MonoTouch/ModernHttpClient.dll
   android:
     - ../build/MonoAndroid/OkHttp.dll
-    - ../build/MonoAndroid/ModernHttpClient.Android.dll
+    - ../build/MonoAndroid/ModernHttpClient.dll
 samples: 
   - name: "HttpClient.iOS Sample"
     path: ../samples/HttpClient.iOS/HttpClient.iOS.sln

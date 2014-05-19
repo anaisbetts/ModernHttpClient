@@ -33,7 +33,7 @@ namespace HttpClient.Android
 				} else if (FindViewById<RadioButton> (Resource.Id.radioButton2).Checked) {
 					await new NetHttp (this).HttpSample ();
 				} else if (FindViewById<RadioButton> (Resource.Id.radioButton3).Checked) {
-					await new NetHttp (this).HttpSample (new OkHttpNetworkHandler ());
+					await new NetHttp (this).HttpSample (new NativeMessageHandler());
 				}
 			};
 		}

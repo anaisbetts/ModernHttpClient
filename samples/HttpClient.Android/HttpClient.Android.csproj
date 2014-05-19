@@ -47,7 +47,7 @@
     <Reference Include="Mono.Android" />
     <Reference Include="System.Net.Http" />
     <Reference Include="ModernHttpClient.Android">
-      <HintPath>..\..\build\MonoAndroid\ModernHttpClient.Android.dll</HintPath>
+      <HintPath>..\..\build\MonoAndroid\ModernHttpClient.dll</HintPath>
     </Reference>
     <Reference Include="OkHttp">
       <HintPath>..\..\build\MonoAndroid\OkHttp.dll</HintPath>

@@ -74,7 +74,7 @@ namespace HttpClient
 				await new NetHttp (this).HttpSample (new CFNetworkHandler ());
 				break;
 			case 2:
-				await new NetHttp (this).HttpSample (new NSUrlSessionHandler());
+				await new NetHttp (this).HttpSample (new NativeMessageHandler());
 				break;
 			}
 		}
