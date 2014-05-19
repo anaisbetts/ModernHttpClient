@@ -104,7 +104,7 @@ namespace ModernHttpClient
                     var resp = (NSHttpUrlResponse)response;
                     var req = data.Request;
 
-                    if (req.RequestUri.Host != resp.Url.Host) {
+                    if (This.throwOnCaptiveNetwork && req.RequestUri.Host != resp.Url.Host) {
                         throw new CaptiveNetworkException(req.RequestUri, new Uri(resp.Url.ToString()));
                     }
 
