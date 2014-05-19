@@ -30,6 +30,7 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <Optimize>true</Optimize>
     <OutputPath>bin\Release\Monotouch</OutputPath>
+    <DebugSymbols>true</DebugSymbols>
     <IntermediateOutputPath>obj\Release\Monotouch</IntermediateOutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
