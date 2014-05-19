@@ -6,17 +6,14 @@ using System.IO;
 
 namespace ModernHttpClient.Portable
 {
-    public class NativeMessageHandler : HttpMessageHandler
+    public class NativeMessageHandler : HttpClientHandler
     {
-        const string wrongVersion = "You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version";
-
         /// <summary>
         /// Initializes a new instance of the <see
         /// cref="ModernHttpClient.Portable.NativeMessageHandler"/> class.
         /// </summary>
         public NativeMessageHandler(): base()
         {
-            throw new Exception(wrongVersion);
         }
 
         /// <summary>
@@ -29,17 +26,11 @@ namespace ModernHttpClient.Portable
         /// content).</param>
         public NativeMessageHandler(bool throwOnCaptiveNetwork) : base()
         {
-            throw new Exception(wrongVersion);
-	}
-
-        public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
-        {
-            throw new Exception(wrongVersion);
         }
 
-        protected override Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
+        [Obsolete("You're using NativeMessageHandler on an unsupported platform or are ref'ing the wrong DLL. This method will do nothing!")]
+        public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
         {
-            throw new Exception(wrongVersion);
         }
     }
 
