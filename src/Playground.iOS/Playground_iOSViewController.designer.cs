@@ -12,6 +12,9 @@ namespace Playground.iOS
 	[Register ("Playground_iOSViewController")]
 	partial class Playground_iOSViewController
 	{
+        [Outlet]
+        MonoTouch.UIKit.UIProgressView progress { get; set; }
+
 		[Outlet]
 		MonoTouch.UIKit.UILabel md5sum { get; set; }
 

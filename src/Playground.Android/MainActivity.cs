@@ -21,6 +21,24 @@ namespace Playground.Android
         int count = 1;
 
         CancellationTokenSource currentToken;
+
+        ProgressBar progress;
+
+        void HandleDownloadProgress(long bytes, long totalBytes, long totalBytesExpected)
+        {
+            Console.WriteLine("Downloading {0}/{1}", totalBytes, totalBytesExpected);
+
+            RunOnUiThread(() => {
+                progress.Max = 10000;
+
+                var progressPercent = (float)totalBytes / (float)totalBytesExpected;
+                var progressOffset = Convert.ToInt32(progressPercent * 10000);
+
+                Console.WriteLine(progressOffset);
+                progress.Progress = progressOffset;
+            });
+        }
+
         protected override void OnCreate (Bundle bundle)
         {
             base.OnCreate (bundle);
@@ -35,6 +53,7 @@ namespace Playground.Android
             var result = FindViewById<TextView>(Resource.Id.result);
             var hashView = FindViewById<TextView>(Resource.Id.md5sum);
             var status = FindViewById<TextView>(Resource.Id.status);
+            progress = FindViewById<ProgressBar>(Resource.Id.progress);
 
             var resp = default(HttpResponseMessage);
 
@@ -45,7 +64,9 @@ namespace Playground.Android
             };
 
             button.Click += async (o, e) => {
-                var client = new HttpClient(new NativeMessageHandler());
+                var handler = new NativeMessageHandler();
+                var client = new HttpClient(handler);
+
                 currentToken = new CancellationTokenSource();
                 var st = new Stopwatch();
 
@@ -53,7 +74,11 @@ namespace Playground.Android
                 try {
                     //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
                     var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
-                    resp = await client.GetAsync(url, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
+
+                    var request = new HttpRequestMessage(HttpMethod.Get, url);
+                    handler.RegisterForProgress(request, HandleDownloadProgress);
+
+                    resp = await client.SendAsync(request, HttpCompletionOption.ResponseHeadersRead, currentToken.Token);
                     result.Text = "Got the headers!";
 
                     status.Text = string.Format("HTTP {0}: {1}", (int)resp.StatusCode, resp.ReasonPhrase);
