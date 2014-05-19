@@ -7,6 +7,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using ModernHttpClient.Portable;
 
 namespace ModernHttpClient
 {
@@ -26,11 +27,19 @@ namespace ModernHttpClient
         readonly Dictionary<NSUrlSessionTask, InflightOperation> inflightRequests = 
             new Dictionary<NSUrlSessionTask, InflightOperation>();
 
-        public NativeMessageHandler()
+        readonly bool throwOnCaptiveNetwork;
+
+        public NativeMessageHandler(): this(false)
+        {
+        }
+
+        public NativeMessageHandler(bool throwOnCaptiveNetwork)
         {
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
                 new DataTaskDelegate(this), null);
+
+            this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
         }
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -56,7 +65,7 @@ namespace ModernHttpClient
             };
 
             var op = session.CreateDataTask(rq);
-
+            
             cancellationToken.ThrowIfCancellationRequested();
 
             var ret = new TaskCompletionSource<HttpResponseMessage>();
@@ -94,13 +103,17 @@ namespace ModernHttpClient
                     }
 
                     var resp = (NSHttpUrlResponse)response;
+					var req = data.Request;
+
+					if (req.RequestUri.Host != resp.Url.Host)
+						throw new CaptiveNetworkException(req.RequestUri, new Uri(resp.Url.ToString()));
+
 
                     var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
                         Content = new CancellableStreamContent(data.ResponseBody, () => {
                             //Console.WriteLine("Cancelling!");
                             if (!data.IsCompleted) dataTask.Cancel();
                             data.IsCompleted = true;
-
                             data.ResponseBody.SetException(new OperationCanceledException());
                         }),
                         RequestMessage = data.Request,
