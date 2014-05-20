@@ -4,7 +4,7 @@ using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
 
-namespace ModernHttpClient.Portable
+namespace ModernHttpClient
 {
     public class NativeMessageHandler : HttpClientHandler
     {
