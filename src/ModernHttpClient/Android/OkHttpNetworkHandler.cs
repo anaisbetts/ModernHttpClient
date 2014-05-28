@@ -57,27 +57,51 @@ namespace ModernHttpClient
         {
             var java_uri = request.RequestUri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
             var url = new Java.Net.URL(java_uri);
-            Java.Net.HttpURLConnection rq;
-            try {
-                rq = client.Open(url);
-            } catch(Java.Net.UnknownHostException e) {
-                throw new WebException("Name resolution failure", e, WebExceptionStatus.NameResolutionFailure, null);
-            }
-            rq.RequestMethod = request.Method.Method.ToUpperInvariant();
 
-            foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
-
+            var body = default(RequestBody);
             if (request.Content != null) {
-                foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
-
-                await Task.Run(async () => {
-                    var contentStream = await request.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                    await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
-                }, cancellationToken).ConfigureAwait(false);
-
-                rq.OutputStream.Close();
+                var bytes = await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                body = RequestBody.Create(MediaType.Parse(request.Content.Headers.ContentType.MediaType), bytes);
             }
 
+            var builder = new Request.Builder()
+                .Method(request.Method.Method.ToUpperInvariant(), body)
+                .Url(url);
+
+            var keyValuePairs = request.Headers
+                .Union(request.Content != null ? 
+                    request.Content.Headers : Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>)
+                .SelectMany(x => x.Value.Select(val => new { Key = x.Key, Value = val }));
+
+            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, kvp.Value);
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var rq = builder.Build();
+            var call = client.NewCall(rq);
+            cancellationToken.Register(call.Cancel);
+
+            var resp = await call.EnqueueAsync().ConfigureAwait(false);
+            var respBody = resp.Body();
+
+            cancellationToken.ThrowIfCancellationRequested();
+
+            var ret = new HttpResponseMessage((HttpStatusCode)resp.Code());
+            if (respBody != null) {
+                ret.Content = new ProgressStreamContent(respBody.ByteStream);
+            } else {
+                ret.Content = new ByteArrayContent(new byte[0]);
+            }
+
+            var respHeaders = resp.Headers();
+            foreach (var k in respHeaders.Names()) {
+                ret.Headers.TryAddWithoutValidation(k, respHeaders.Get(k));
+                ret.Content.Headers.TryAddWithoutValidation(k, respHeaders.Get(k));
+            }
+
+            return ret; 
+
+            /*
             return await Task.Run (() => {
                 var ret = default(HttpResponseMessage);
 
@@ -120,6 +144,7 @@ namespace ModernHttpClient
                 ret.RequestMessage = request;
                 return ret;
             }, cancellationToken).ConfigureAwait(false);
+*/
         }
 
         async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
@@ -138,6 +163,34 @@ namespace ModernHttpClient
 
                 ct.ThrowIfCancellationRequested();
             }, ct).ConfigureAwait(false);
+        }
+
+    }
+
+    public static class AwaitableOkHttp
+    {
+        public static Task<Response> EnqueueAsync(this Call This)
+        {
+            var cb = new OkTaskCallback();
+            This.Enqueue(cb);
+
+            return cb.Task;
+        }
+
+        class OkTaskCallback : Java.Lang.Object, ICallback
+        {
+            readonly TaskCompletionSource<Response> tcs = new TaskCompletionSource<Response>();
+            public Task<Response> Task { get { return tcs.Task; } }
+
+            public void OnFailure(Request p0, Java.Lang.Throwable p1)
+            {
+                tcs.TrySetException(p1);
+            }
+
+            public void OnResponse(Response p0)
+            {
+                tcs.TrySetResult(p0);
+            }
         }
     }
 }
