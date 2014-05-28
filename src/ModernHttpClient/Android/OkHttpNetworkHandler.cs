@@ -70,7 +70,8 @@ namespace ModernHttpClient
 
             var keyValuePairs = request.Headers
                 .Union(request.Content != null ? 
-                    request.Content.Headers : Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>)
+                    (IEnumerable<KeyValuePair<string, IEnumerable<string>>>)request.Content.Headers :
+                    Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>())
                 .SelectMany(x => x.Value.Select(val => new { Key = x.Key, Value = val }));
 
             foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, kvp.Value);
@@ -88,7 +89,9 @@ namespace ModernHttpClient
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.Code());
             if (respBody != null) {
-                ret.Content = new ProgressStreamContent(respBody.ByteStream);
+                var content = new ProgressStreamContent(respBody.ByteStream());
+                content.Progress = getAndRemoveCallbackFromRegister(request);
+                ret.Content = content;
             } else {
                 ret.Content = new ByteArrayContent(new byte[0]);
             }
