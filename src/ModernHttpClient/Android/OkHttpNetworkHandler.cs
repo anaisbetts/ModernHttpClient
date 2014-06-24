@@ -15,7 +15,7 @@ namespace ModernHttpClient
         readonly OkHttpClient client = new OkHttpClient();
         readonly bool throwOnCaptiveNetwork;
 
-        readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks = 
+        readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks =
             new Dictionary<HttpRequestMessage, WeakReference>();
 
         public NativeMessageHandler() : this(false) {}
@@ -69,7 +69,7 @@ namespace ModernHttpClient
                 .Url(url);
 
             var keyValuePairs = request.Headers
-                .Union(request.Content != null ? 
+                .Union(request.Content != null ?
                     (IEnumerable<KeyValuePair<string, IEnumerable<string>>>)request.Content.Headers :
                     Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>())
                 .SelectMany(x => x.Value.Select(val => new { Key = x.Key, Value = val }));
@@ -102,72 +102,8 @@ namespace ModernHttpClient
                 ret.Content.Headers.TryAddWithoutValidation(k, respHeaders.Get(k));
             }
 
-            return ret; 
-
-            /*
-            return await Task.Run (() => {
-                var ret = default(HttpResponseMessage);
-
-                // NB: This is the line that blocks until we have headers
-                try {
-                    ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
-                } catch(Java.Net.UnknownHostException e) {
-                    throw new WebException("Name resolution failure", e, WebExceptionStatus.NameResolutionFailure, null);
-                } catch(Java.Net.ConnectException e) {
-                    throw new WebException("Connection failed", e, WebExceptionStatus.ConnectFailure, null);
-                }
-
-                // Test to see if we're being redirected (i.e. in a captive network)
-                if (throwOnCaptiveNetwork && (url.Host != rq.URL.Host)) {
-                    throw new WebException("Hostnames don't match, you are probably on a captive network");
-                }
-
-                cancellationToken.ThrowIfCancellationRequested();
-
-                var progressStreamContent = new ProgressStreamContent(new ConcatenatingStream(new Func<Stream>[] {
-                    () => ret.IsSuccessStatusCode ? rq.InputStream : new MemoryStream(),
-                    () => rq.ErrorStream ?? new MemoryStream (),
-                }, true));
-
-                progressStreamContent.Progress = getAndRemoveCallbackFromRegister(request);
-                ret.Content = progressStreamContent;
-
-                var keyValuePairs = rq.HeaderFields.Keys
-                    .Where(k => k != null)      // Yes, this happens. I can't even. 
-                    .SelectMany(k => rq.HeaderFields[k]
-                        .Select(val => new { Key = k, Value = val }));
-
-                foreach (var v in keyValuePairs) {
-                    ret.Headers.TryAddWithoutValidation(v.Key, v.Value);
-                    ret.Content.Headers.TryAddWithoutValidation(v.Key, v.Value);
-                }
-
-                cancellationToken.Register (ret.Content.Dispose);
-
-                ret.RequestMessage = request;
-                return ret;
-            }, cancellationToken).ConfigureAwait(false);
-*/
+            return ret;
         }
-
-        async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
-        {
-            await Task.Run(async () => {
-                var buf = new byte[4096];
-                var read = 0;
-
-                do {
-                    read = await source.ReadAsync(buf, 0, 4096, ct).ConfigureAwait(false);
-
-                    if (read > 0) {
-                        await target.WriteAsync(buf, 0, read, ct).ConfigureAwait(false);
-                    }
-                } while (!ct.IsCancellationRequested && read > 0);
-
-                ct.ThrowIfCancellationRequested();
-            }, ct).ConfigureAwait(false);
-        }
-
     }
 
     public static class AwaitableOkHttp
@@ -185,7 +121,7 @@ namespace ModernHttpClient
             readonly TaskCompletionSource<Response> tcs = new TaskCompletionSource<Response>();
             public Task<Response> Task { get { return tcs.Task; } }
 
-            public void OnFailure(Request p0, Java.Lang.Throwable p1)
+            public void OnFailure(Request p0, Java.IO.IOException p1)
             {
                 tcs.TrySetException(p1);
             }
