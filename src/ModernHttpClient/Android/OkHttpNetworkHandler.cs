@@ -15,7 +15,7 @@ namespace ModernHttpClient
         readonly OkHttpClient client = new OkHttpClient();
         readonly bool throwOnCaptiveNetwork;
 
-        readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks = 
+        readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks =
             new Dictionary<HttpRequestMessage, WeakReference>();
 
         public NativeMessageHandler() : this(false) {}
@@ -57,87 +57,79 @@ namespace ModernHttpClient
         {
             var java_uri = request.RequestUri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
             var url = new Java.Net.URL(java_uri);
-            Java.Net.HttpURLConnection rq;
-            try {
-                rq = client.Open(url);
-            } catch(Java.Net.UnknownHostException e) {
-                throw new WebException("Name resolution failure", e, WebExceptionStatus.NameResolutionFailure, null);
-            }
-            rq.RequestMethod = request.Method.Method.ToUpperInvariant();
 
-            foreach (var kvp in request.Headers) { rq.SetRequestProperty(kvp.Key, kvp.Value.FirstOrDefault()); }
-
+            var body = default(RequestBody);
             if (request.Content != null) {
-                foreach (var kvp in request.Content.Headers) { rq.SetRequestProperty (kvp.Key, kvp.Value.FirstOrDefault ()); }
-
-                await Task.Run(async () => {
-                    var contentStream = await request.Content.ReadAsStreamAsync().ConfigureAwait(false);
-                    await copyToAsync(contentStream, rq.OutputStream, cancellationToken).ConfigureAwait(false);
-                }, cancellationToken).ConfigureAwait(false);
-
-                rq.OutputStream.Close();
+                var bytes = await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
+                body = RequestBody.Create(MediaType.Parse(request.Content.Headers.ContentType.MediaType), bytes);
             }
 
-            return await Task.Run (() => {
-                var ret = default(HttpResponseMessage);
+            var builder = new Request.Builder()
+                .Method(request.Method.Method.ToUpperInvariant(), body)
+                .Url(url);
 
-                // NB: This is the line that blocks until we have headers
-                try {
-                    ret = new HttpResponseMessage((HttpStatusCode)rq.ResponseCode);
-                } catch(Java.Net.UnknownHostException e) {
-                    throw new WebException("Name resolution failure", e, WebExceptionStatus.NameResolutionFailure, null);
-                } catch(Java.Net.ConnectException e) {
-                    throw new WebException("Connection failed", e, WebExceptionStatus.ConnectFailure, null);
-                }
+            var keyValuePairs = request.Headers
+                .Union(request.Content != null ?
+                    (IEnumerable<KeyValuePair<string, IEnumerable<string>>>)request.Content.Headers :
+                    Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>())
+                .SelectMany(x => x.Value.Select(val => new { Key = x.Key, Value = val }));
 
-                // Test to see if we're being redirected (i.e. in a captive network)
-                if (throwOnCaptiveNetwork && (url.Host != rq.URL.Host)) {
-                    throw new WebException("Hostnames don't match, you are probably on a captive network");
-                }
+            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, kvp.Value);
 
-                cancellationToken.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
 
-                var progressStreamContent = new ProgressStreamContent(new ConcatenatingStream(new Func<Stream>[] {
-                    () => ret.IsSuccessStatusCode ? rq.InputStream : new MemoryStream(),
-                    () => rq.ErrorStream ?? new MemoryStream (),
-                }, true));
+            var rq = builder.Build();
+            var call = client.NewCall(rq);
+            cancellationToken.Register(call.Cancel);
 
-                progressStreamContent.Progress = getAndRemoveCallbackFromRegister(request);
-                ret.Content = progressStreamContent;
+            var resp = await call.EnqueueAsync().ConfigureAwait(false);
+            var respBody = resp.Body();
 
-                var keyValuePairs = rq.HeaderFields.Keys
-                    .Where(k => k != null)      // Yes, this happens. I can't even. 
-                    .SelectMany(k => rq.HeaderFields[k]
-                        .Select(val => new { Key = k, Value = val }));
+            cancellationToken.ThrowIfCancellationRequested();
 
-                foreach (var v in keyValuePairs) {
-                    ret.Headers.TryAddWithoutValidation(v.Key, v.Value);
-                    ret.Content.Headers.TryAddWithoutValidation(v.Key, v.Value);
-                }
+            var ret = new HttpResponseMessage((HttpStatusCode)resp.Code());
+            if (respBody != null) {
+                var content = new ProgressStreamContent(respBody.ByteStream());
+                content.Progress = getAndRemoveCallbackFromRegister(request);
+                ret.Content = content;
+            } else {
+                ret.Content = new ByteArrayContent(new byte[0]);
+            }
 
-                cancellationToken.Register (ret.Content.Dispose);
+            var respHeaders = resp.Headers();
+            foreach (var k in respHeaders.Names()) {
+                ret.Headers.TryAddWithoutValidation(k, respHeaders.Get(k));
+                ret.Content.Headers.TryAddWithoutValidation(k, respHeaders.Get(k));
+            }
 
-                ret.RequestMessage = request;
-                return ret;
-            }, cancellationToken).ConfigureAwait(false);
+            return ret;
+        }
+    }
+
+    public static class AwaitableOkHttp
+    {
+        public static Task<Response> EnqueueAsync(this Call This)
+        {
+            var cb = new OkTaskCallback();
+            This.Enqueue(cb);
+
+            return cb.Task;
         }
 
-        async Task copyToAsync(Stream source, Stream target, CancellationToken ct)
+        class OkTaskCallback : Java.Lang.Object, ICallback
         {
-            await Task.Run(async () => {
-                var buf = new byte[4096];
-                var read = 0;
+            readonly TaskCompletionSource<Response> tcs = new TaskCompletionSource<Response>();
+            public Task<Response> Task { get { return tcs.Task; } }
 
-                do {
-                    read = await source.ReadAsync(buf, 0, 4096, ct).ConfigureAwait(false);
+            public void OnFailure(Request p0, Java.IO.IOException p1)
+            {
+                tcs.TrySetException(p1);
+            }
 
-                    if (read > 0) {
-                        await target.WriteAsync(buf, 0, read, ct).ConfigureAwait(false);
-                    }
-                } while (!ct.IsCancellationRequested && read > 0);
-
-                ct.ThrowIfCancellationRequested();
-            }, ct).ConfigureAwait(false);
+            public void OnResponse(Response p0)
+            {
+                tcs.TrySetResult(p0);
+            }
         }
     }
 }
