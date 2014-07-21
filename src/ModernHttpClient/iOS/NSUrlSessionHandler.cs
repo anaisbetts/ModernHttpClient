@@ -172,13 +172,90 @@ namespace ModernHttpClient
                 data.IsCompleted = true;
 
                 if (error != null) {
-                    var ex = default(Exception);
-                    if (error.Description.StartsWith("cancel", StringComparison.OrdinalIgnoreCase)) {
-                        ex = new OperationCanceledException();
-                    } else {
-                        ex = new WebException(error.LocalizedDescription);
-                    }
-
+					Exception ex = null;
+					// determine an exception to throw based on what happened
+					if(error.Domain == NSError.NSUrlErrorDomain)
+					{
+						// networking error occurred
+						NSUrlError urlError;
+						var webExceptionStatus = WebExceptionStatus.UnknownError;
+						// convert the error code into an enumeration (this is future proof, rather than just casting integer)
+						if(!Enum.TryParse<NSUrlError>(error.Code.ToString(), out urlError))
+							urlError = NSUrlError.Unknown;
+						// parse the enum into a web exception status or exception. some of these values don't necessarily
+						// translate completely to what WebExceptionStatus supports, so made some best guesses here.
+						// for your reading pleasure, compare these:
+						// * Apple docs: https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Constants/Reference/reference.html
+						// * .NET docs: http://msdn.microsoft.com/en-us/library/system.net.webexceptionstatus(v=vs.110).aspx
+						switch(urlError)
+						{
+							case NSUrlError.Cancelled:
+							case NSUrlError.UserCancelledAuthentication:
+								ex = new OperationCanceledException();
+								break;
+							case NSUrlError.BadURL:
+							case NSUrlError.UnsupportedURL:
+							case NSUrlError.CannotConnectToHost:
+							case NSUrlError.ResourceUnavailable:
+							case NSUrlError.NotConnectedToInternet:
+							case NSUrlError.UserAuthenticationRequired:
+								webExceptionStatus = WebExceptionStatus.ConnectFailure;
+								break;
+							case NSUrlError.TimedOut:
+								webExceptionStatus = WebExceptionStatus.Timeout;
+								break;
+							case NSUrlError.CannotFindHost:
+							case NSUrlError.DNSLookupFailed:
+								webExceptionStatus = WebExceptionStatus.NameResolutionFailure;
+								break;
+							case NSUrlError.DataLengthExceedsMaximum:
+								webExceptionStatus = WebExceptionStatus.MessageLengthLimitExceeded;
+								break;
+							case NSUrlError.NetworkConnectionLost:
+								webExceptionStatus = WebExceptionStatus.ConnectionClosed;
+								break;
+							case NSUrlError.HTTPTooManyRedirects:
+							case NSUrlError.RedirectToNonExistentLocation:
+								webExceptionStatus = WebExceptionStatus.ProtocolError;
+								break;
+							case NSUrlError.BadServerResponse:
+							case NSUrlError.ZeroByteResource:
+							case NSUrlError.CannotDecodeContentData:
+							case NSUrlError.CannotDecodeRawData:
+							case NSUrlError.CannotParseResponse:
+							case NSUrlError.FileDoesNotExist:
+							case NSUrlError.FileIsDirectory:
+							case NSUrlError.NoPermissionsToReadFile:
+							case NSUrlError.CannotLoadFromNetwork:
+							case NSUrlError.CannotCreateFile:
+							case NSUrlError.CannotOpenFile:
+							case NSUrlError.CannotCloseFile:
+							case NSUrlError.CannotWriteToFile:
+							case NSUrlError.CannotRemoveFile:
+							case NSUrlError.CannotMoveFile:
+							case NSUrlError.DownloadDecodingFailedMidStream:
+							case NSUrlError.DownloadDecodingFailedToComplete:
+								webExceptionStatus = WebExceptionStatus.ReceiveFailure;
+								break;
+							case NSUrlError.SecureConnectionFailed:
+								webExceptionStatus = WebExceptionStatus.SecureChannelFailure;
+								break;
+							case NSUrlError.ServerCertificateHasBadDate:
+							case NSUrlError.ServerCertificateHasUnknownRoot:
+							case NSUrlError.ServerCertificateNotYetValid:
+							case NSUrlError.ServerCertificateUntrusted:
+							case NSUrlError.ClientCertificateRejected:
+								webExceptionStatus = WebExceptionStatus.TrustFailure;
+								break;
+						}
+						// if we parsed a web exception status code, create an exception for it
+						if(webExceptionStatus != WebExceptionStatus.UnknownError)
+							ex = new WebException(error.LocalizedDescription, webExceptionStatus);
+					}
+					// if no exception generated yet, throw a normal exception with the error message.
+					if(ex == null)
+						ex = new Exception(error.LocalizedDescription);
+					// pass the exception to the response
                     data.FutureResponse.TrySetException(ex);
                     data.ResponseBody.SetException(ex);
                     return;
