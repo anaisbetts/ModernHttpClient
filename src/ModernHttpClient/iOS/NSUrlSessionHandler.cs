@@ -172,19 +172,16 @@ namespace ModernHttpClient
                 data.IsCompleted = true;
 
                 if (error != null) {
-                    var ex = default(Exception);
-                    if (error.Description.StartsWith("cancel", StringComparison.OrdinalIgnoreCase)) {
-                        ex = new OperationCanceledException();
-                    } else {
-                        ex = new WebException(error.LocalizedDescription);
-                    }
+                    var ex = createExceptionForNSError(error);
 
+                    // Pass the exception to the response
                     data.FutureResponse.TrySetException(ex);
                     data.ResponseBody.SetException(ex);
                     return;
                 }
 
                 data.ResponseBody.Complete();
+
                 lock (This.inflightRequests) {
                     This.inflightRequests.Remove(task);
                 }
@@ -207,6 +204,100 @@ namespace ModernHttpClient
                 lock (This.inflightRequests) {
                     return This.inflightRequests[task];
                 }
+            }
+
+            Exception createExceptionForNSError(NSError error)
+            {
+                var ret = default(Exception);
+                var urlError = default(NSUrlError);
+                var webExceptionStatus = WebExceptionStatus.UnknownError;
+
+                // If the domain is something other than NSUrlErrorDomain, 
+                // just grab the default info
+                if (error.Domain != NSError.NSUrlErrorDomain) goto leave;
+
+                // Convert the error code into an enumeration (this is future
+                // proof, rather than just casting integer)
+                if (!Enum.TryParse<NSUrlError>(error.Code.ToString(), out urlError)) urlError = NSUrlError.Unknown;
+
+                // Parse the enum into a web exception status or exception. some
+                // of these values don't necessarily translate completely to
+                // what WebExceptionStatus supports, so made some best guesses
+                // here.  for your reading pleasure, compare these:
+                //
+                // Apple docs: https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Constants/Reference/reference.html
+                // .NET docs: http://msdn.microsoft.com/en-us/library/system.net.webexceptionstatus(v=vs.110).aspx
+                switch(urlError) {
+                case NSUrlError.Cancelled:
+                case NSUrlError.UserCancelledAuthentication:
+                    ret = new OperationCanceledException();
+                    break;
+                case NSUrlError.BadURL:
+                case NSUrlError.UnsupportedURL:
+                case NSUrlError.CannotConnectToHost:
+                case NSUrlError.ResourceUnavailable:
+                case NSUrlError.NotConnectedToInternet:
+                case NSUrlError.UserAuthenticationRequired:
+                    webExceptionStatus = WebExceptionStatus.ConnectFailure;
+                    break;
+                case NSUrlError.TimedOut:
+                    webExceptionStatus = WebExceptionStatus.Timeout;
+                    break;
+                case NSUrlError.CannotFindHost:
+                case NSUrlError.DNSLookupFailed:
+                    webExceptionStatus = WebExceptionStatus.NameResolutionFailure;
+                    break;
+                case NSUrlError.DataLengthExceedsMaximum:
+                    webExceptionStatus = WebExceptionStatus.MessageLengthLimitExceeded;
+                    break;
+                case NSUrlError.NetworkConnectionLost:
+                    webExceptionStatus = WebExceptionStatus.ConnectionClosed;
+                    break;
+                case NSUrlError.HTTPTooManyRedirects:
+                case NSUrlError.RedirectToNonExistentLocation:
+                    webExceptionStatus = WebExceptionStatus.ProtocolError;
+                    break;
+                case NSUrlError.BadServerResponse:
+                case NSUrlError.ZeroByteResource:
+                case NSUrlError.CannotDecodeContentData:
+                case NSUrlError.CannotDecodeRawData:
+                case NSUrlError.CannotParseResponse:
+                case NSUrlError.FileDoesNotExist:
+                case NSUrlError.FileIsDirectory:
+                case NSUrlError.NoPermissionsToReadFile:
+                case NSUrlError.CannotLoadFromNetwork:
+                case NSUrlError.CannotCreateFile:
+                case NSUrlError.CannotOpenFile:
+                case NSUrlError.CannotCloseFile:
+                case NSUrlError.CannotWriteToFile:
+                case NSUrlError.CannotRemoveFile:
+                case NSUrlError.CannotMoveFile:
+                case NSUrlError.DownloadDecodingFailedMidStream:
+                case NSUrlError.DownloadDecodingFailedToComplete:
+                    webExceptionStatus = WebExceptionStatus.ReceiveFailure;
+                    break;
+                case NSUrlError.SecureConnectionFailed:
+                    webExceptionStatus = WebExceptionStatus.SecureChannelFailure;
+                    break;
+                case NSUrlError.ServerCertificateHasBadDate:
+                case NSUrlError.ServerCertificateHasUnknownRoot:
+                case NSUrlError.ServerCertificateNotYetValid:
+                case NSUrlError.ServerCertificateUntrusted:
+                case NSUrlError.ClientCertificateRejected:
+                    webExceptionStatus = WebExceptionStatus.TrustFailure;
+                    break;
+                }
+
+                // If we parsed a web exception status code, create an exception
+                // for it
+                if (webExceptionStatus != WebExceptionStatus.UnknownError) {
+                    ret = new WebException(error.LocalizedDescription, webExceptionStatus);
+                }
+
+            leave:
+                // If no exception generated yet, throw a normal exception with
+                // the error message.
+                return ret ?? new Exception(error.LocalizedDescription);
             }
         }
     }
