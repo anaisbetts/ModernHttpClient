@@ -12,6 +12,8 @@ using System.Diagnostics;
 using System.Threading.Tasks;
 using System.Security.Cryptography;
 using System.Text;
+using System.Net;
+using System.Linq;
 
 namespace Playground.Android
 {
@@ -45,6 +47,21 @@ namespace Playground.Android
 
             // Set our view from the "main" layout resource
             SetContentView (Resource.Layout.Main);
+
+            ServicePointManager.ClientCipherSuitesCallback += (protocol, allCiphers) =>
+                allCiphers.Where(x => !x.Contains("CBC")).ToList();
+
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => {
+                System.Diagnostics.Debug.WriteLine("Callback Server Certificate: " + sslPolicyErrors);
+
+                foreach(var el in chain.ChainElements)
+                {
+                    System.Diagnostics.Debug.WriteLine(el.Certificate.GetCertHashString());
+                    System.Diagnostics.Debug.WriteLine(el.Information);
+                }
+
+                return true;
+            };
 
             // Get our button from the layout resource,
             // and attach an event to it

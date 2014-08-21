@@ -3,15 +3,87 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using OkHttp;
+using Javax.Net.Ssl;
+using System.Text.RegularExpressions;
 
 namespace ModernHttpClient
 {
     public class NativeMessageHandler : HttpMessageHandler
     {
+        private class HostnameVerifier : Java.Lang.Object, IHostnameVerifier
+        {
+            private static readonly Regex cnRegex = new Regex("CN=(.*?),.*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+
+            public bool Verify(string hostname, ISSLSession session)
+            {
+                var serverCertificateCheck = true; 
+                var clientCipherSuitesCheck = true;
+
+                if(ServicePointManager.ServerCertificateValidationCallback != null)
+                {
+                    var certificates = session.GetPeerCertificateChain();
+                    var chain = new System.Security.Cryptography.X509Certificates.X509Chain();
+                    System.Security.Cryptography.X509Certificates.X509Certificate2 cert = null;
+                    var errors = System.Net.Security.SslPolicyErrors.None;
+
+                    if(certificates == null || certificates.Length == 0)//no cert at all
+                    {
+                        errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNotAvailable;
+                    }
+                    else
+                    {
+                        if(certificates.Length == 1)//no root?
+                        {
+                            errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
+                        }
+                        else
+                        {
+                            var netCerts = certificates.Select(x => new System.Security.Cryptography.X509Certificates.X509Certificate2(x.GetEncoded())).ToArray();
+
+                            for(int i = 1; i < netCerts.Length; i++)
+                            {
+                                chain.ChainPolicy.ExtraStore.Add(netCerts[i]);
+                            }
+
+                            cert = netCerts[0];
+
+                            chain.ChainPolicy.RevocationFlag = System.Security.Cryptography.X509Certificates.X509RevocationFlag.EntireChain;
+                            chain.ChainPolicy.RevocationMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck;
+                            chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
+                            chain.ChainPolicy.VerificationFlags = 
+                                System.Security.Cryptography.X509Certificates.X509VerificationFlags.AllowUnknownCertificateAuthority;
+
+                            if(!chain.Build(cert))
+                            {
+                                errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
+                            }
+
+                            var subject = cert.Subject;
+                            var subjectCn = cnRegex.Match(subject).Groups[1].Value;
+
+                            if(String.IsNullOrWhiteSpace(subjectCn) || subjectCn != hostname)
+                            {
+                                errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch;
+                            }
+                        }
+                    }
+
+                    serverCertificateCheck = ServicePointManager.ServerCertificateValidationCallback(this, cert, chain, errors);
+                }
+
+                if (ServicePointManager.ClientCipherSuitesCallback != null) {
+                    var protocol = session.Protocol.StartsWith("SSL", StringComparison.InvariantCulture) ? SecurityProtocolType.Ssl3 : SecurityProtocolType.Tls;
+                    var acceptedCiphers = ServicePointManager.ClientCipherSuitesCallback(protocol, new[] { session.CipherSuite });
+                    clientCipherSuitesCheck = acceptedCiphers.Contains(session.CipherSuite);
+                }
+
+                return serverCertificateCheck & clientCipherSuitesCheck;
+            }
+        }
+
         readonly OkHttpClient client = new OkHttpClient();
         readonly bool throwOnCaptiveNetwork;
 
@@ -23,6 +95,7 @@ namespace ModernHttpClient
         public NativeMessageHandler(bool throwOnCaptiveNetwork)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+            client.SetHostnameVerifier(new HostnameVerifier());
         }
 
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
@@ -82,7 +155,7 @@ namespace ModernHttpClient
             var call = client.NewCall(rq);
             cancellationToken.Register(call.Cancel);
 
-            var resp = await call.EnqueueAsync().ConfigureAwait(false);
+            Response resp = await call.EnqueueAsync().ConfigureAwait(false);
             var respBody = resp.Body();
 
             cancellationToken.ThrowIfCancellationRequested();
@@ -123,7 +196,15 @@ namespace ModernHttpClient
 
             public void OnFailure(Request p0, Java.IO.IOException p1)
             {
-                tcs.TrySetException(p1);
+                //kind of a hack, but the simplest way to find out that server cert. validation failed
+                if (p1.Message == String.Format("Hostname '{0}' was not verified", p0.Url().Host)) 
+                {
+                    tcs.TrySetException(new WebException(p1.LocalizedMessage, WebExceptionStatus.TrustFailure));
+                } 
+                else 
+                {
+                    tcs.TrySetException(p1);
+                }
             }
 
             public void OnResponse(Response p0)
