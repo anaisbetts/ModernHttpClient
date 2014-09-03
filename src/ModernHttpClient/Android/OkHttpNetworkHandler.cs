@@ -3,10 +3,11 @@ using System.Threading;
 using System.Threading.Tasks;
 using System.Collections.Generic;
 using System.Linq;
-using System.IO;
 using System.Net;
 using System.Net.Http;
 using OkHttp;
+using Javax.Net.Ssl;
+using System.Text.RegularExpressions;
 
 namespace ModernHttpClient
 {
@@ -23,6 +24,7 @@ namespace ModernHttpClient
         public NativeMessageHandler(bool throwOnCaptiveNetwork)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+            client.SetHostnameVerifier(new HostnameVerifier());
         }
 
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
@@ -123,13 +125,107 @@ namespace ModernHttpClient
 
             public void OnFailure(Request p0, Java.IO.IOException p1)
             {
-                tcs.TrySetException(p1);
+                // Kind of a hack, but the simplest way to find out that server cert. validation failed
+                if (p1.Message == String.Format("Hostname '{0}' was not verified", p0.Url().Host)) {
+                    tcs.TrySetException(new WebException(p1.LocalizedMessage, WebExceptionStatus.TrustFailure));
+                } else {
+                    tcs.TrySetException(p1);
+                }
             }
 
             public void OnResponse(Response p0)
             {
                 tcs.TrySetResult(p0);
             }
+        }
+    }
+
+    class HostnameVerifier : Java.Lang.Object, IHostnameVerifier
+    {
+        static readonly Regex cnRegex = new Regex("CN=(.*?),.*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+
+        public bool Verify(string hostname, ISSLSession session)
+        {
+            return verifyServerCertificate(hostname, session) & verifyClientCiphers(hostname, session);
+        }
+
+        /// <summary>
+        /// Verifies the server certificate by calling into ServicePointManager.ServerCertificateValidationCallback or,
+        /// if the is no delegate attached to it by using the default hostname verifier.
+        /// </summary>
+        /// <returns><c>true</c>, if server certificate was verifyed, <c>false</c> otherwise.</returns>
+        /// <param name="hostname"></param>
+        /// <param name="session"></param>
+        bool verifyServerCertificate(string hostname, ISSLSession session)
+        {
+            var defaultVerifier = HttpsURLConnection.DefaultHostnameVerifier;
+
+            if (ServicePointManager.ServerCertificateValidationCallback == null) return defaultVerifier.Verify(hostname, session);
+
+            // Convert java certificates to .NET certificates and build cert chain from root certificate
+            var certificates = session.GetPeerCertificateChain();
+            var chain = new System.Security.Cryptography.X509Certificates.X509Chain();
+            System.Security.Cryptography.X509Certificates.X509Certificate2 root = null;
+            var errors = System.Net.Security.SslPolicyErrors.None;
+
+            // Build certificate chain and check for errors
+            if (certificates == null || certificates.Length == 0) {//no cert at all
+                errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNotAvailable;
+                goto bail;
+            } 
+
+            if (certificates.Length == 1) {//no root?
+                errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
+                goto bail;
+            } 
+
+            var netCerts = certificates.Select(x => new System.Security.Cryptography.X509Certificates.X509Certificate2(x.GetEncoded())).ToArray();
+
+            for (int i = 1; i < netCerts.Length; i++) {
+                chain.ChainPolicy.ExtraStore.Add(netCerts[i]);
+            }
+
+            root = netCerts[0];
+
+            chain.ChainPolicy.RevocationFlag = System.Security.Cryptography.X509Certificates.X509RevocationFlag.EntireChain;
+            chain.ChainPolicy.RevocationMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck;
+            chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
+            chain.ChainPolicy.VerificationFlags = 
+                    System.Security.Cryptography.X509Certificates.X509VerificationFlags.AllowUnknownCertificateAuthority;
+
+            if (!chain.Build(root)) {
+                errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
+                goto bail;
+            }
+
+            var subject = root.Subject;
+            var subjectCn = cnRegex.Match(subject).Groups[1].Value;
+
+            if (String.IsNullOrWhiteSpace(subjectCn) || subjectCn != hostname) {
+                errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch;
+                goto bail;
+            }
+
+        bail:
+            // Call the delegate to validate
+            return ServicePointManager.ServerCertificateValidationCallback(this, root, chain, errors);
+        }
+
+        /// <summary>
+        /// Verifies client ciphers and is only available in Mono and Xamarin products.
+        /// </summary>
+        /// <returns><c>true</c>, if client ciphers was verifyed, <c>false</c> otherwise.</returns>
+        /// <param name="hostname"></param>
+        /// <param name="session"></param>
+        bool verifyClientCiphers(string hostname, ISSLSession session)
+        {
+            var callback = ServicePointManager.ClientCipherSuitesCallback;
+            if (callback == null) return true;
+
+            var protocol = session.Protocol.StartsWith("SSL", StringComparison.InvariantCulture) ? SecurityProtocolType.Ssl3 : SecurityProtocolType.Tls;
+            var acceptedCiphers = callback(protocol, new[] { session.CipherSuite });
+
+            return acceptedCiphers.Contains(session.CipherSuite);
         }
     }
 }
