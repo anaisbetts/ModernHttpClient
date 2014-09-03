@@ -48,14 +48,17 @@ namespace Playground.Android
             // Set our view from the "main" layout resource
             SetContentView (Resource.Layout.Main);
 
+            //This API is only available in Mono and Xamarin products.
+            //You can filter and/or re-order the ciphers suites that the SSL/TLS server will accept from a client.
+            //The following example removes weak (export) ciphers from the list that will be offered to the server.
             ServicePointManager.ClientCipherSuitesCallback += (protocol, allCiphers) =>
-                allCiphers.Where(x => !x.Contains("CBC")).ToList();
+                allCiphers.Where(x => !x.Contains("EXPORT")).ToList();
 
+            //Here we accept any certificate and just print the cert's data.
             ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => {
                 System.Diagnostics.Debug.WriteLine("Callback Server Certificate: " + sslPolicyErrors);
 
-                foreach(var el in chain.ChainElements)
-                {
+                foreach(var el in chain.ChainElements) {
                     System.Diagnostics.Debug.WriteLine(el.Certificate.GetCertHashString());
                     System.Diagnostics.Debug.WriteLine(el.Information);
                 }

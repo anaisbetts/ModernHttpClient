@@ -13,74 +13,90 @@ namespace ModernHttpClient
 {
     public class NativeMessageHandler : HttpMessageHandler
     {
-        private class HostnameVerifier : Java.Lang.Object, IHostnameVerifier
+        class HostnameVerifier : Java.Lang.Object, IHostnameVerifier
         {
-            private static readonly Regex cnRegex = new Regex("CN=(.*?),.*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+            static readonly Regex cnRegex = new Regex("CN=(.*?),.*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
 
             public bool Verify(string hostname, ISSLSession session)
             {
-                var serverCertificateCheck = true; 
-                var clientCipherSuitesCheck = true;
+                return VerifyServerCertificate(hostname, session) & VerifyClientCiphers(hostname, session);
+            }
 
-                if(ServicePointManager.ServerCertificateValidationCallback != null)
-                {
-                    var certificates = session.GetPeerCertificateChain();
-                    var chain = new System.Security.Cryptography.X509Certificates.X509Chain();
-                    System.Security.Cryptography.X509Certificates.X509Certificate2 cert = null;
-                    var errors = System.Net.Security.SslPolicyErrors.None;
+            /// <summary>
+            /// Verifies the server certificate by calling into ServicePointManager.ServerCertificateValidationCallback or,
+            /// if the is no delegate attached to it by using the default hostname verifier.
+            /// </summary>
+            /// <returns><c>true</c>, if server certificate was verifyed, <c>false</c> otherwise.</returns>
+            /// <param name="hostname"></param>
+            /// <param name="session"></param>
+            bool VerifyServerCertificate(string hostname, ISSLSession session)
+            {
+                var defaultVerifier = HttpsURLConnection.DefaultHostnameVerifier;
 
-                    if(certificates == null || certificates.Length == 0)//no cert at all
-                    {
-                        errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNotAvailable;
-                    }
-                    else
-                    {
-                        if(certificates.Length == 1)//no root?
-                        {
-                            errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
+                if (ServicePointManager.ServerCertificateValidationCallback == null) return defaultVerifier.Verify(hostname, session);
+
+                //convert java certificates to .NET certificates and build cert chain from root certificate
+
+                var certificates = session.GetPeerCertificateChain();
+                var chain = new System.Security.Cryptography.X509Certificates.X509Chain();
+                System.Security.Cryptography.X509Certificates.X509Certificate2 root = null;
+                var errors = System.Net.Security.SslPolicyErrors.None;
+
+                //build certificate chain and check for errors
+                if (certificates == null || certificates.Length == 0) {//no cert at all
+                    errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNotAvailable;
+                } else {
+                    if (certificates.Length == 1) {//no root?
+                        errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
+                    } else {
+                        var netCerts = certificates.Select(x => new System.Security.Cryptography.X509Certificates.X509Certificate2(x.GetEncoded())).ToArray();
+
+                        for (int i = 1; i < netCerts.Length; i++) {
+                            chain.ChainPolicy.ExtraStore.Add(netCerts[i]);
                         }
-                        else
-                        {
-                            var netCerts = certificates.Select(x => new System.Security.Cryptography.X509Certificates.X509Certificate2(x.GetEncoded())).ToArray();
 
-                            for(int i = 1; i < netCerts.Length; i++)
-                            {
-                                chain.ChainPolicy.ExtraStore.Add(netCerts[i]);
-                            }
+                        root = netCerts[0];
 
-                            cert = netCerts[0];
-
-                            chain.ChainPolicy.RevocationFlag = System.Security.Cryptography.X509Certificates.X509RevocationFlag.EntireChain;
-                            chain.ChainPolicy.RevocationMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck;
-                            chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
-                            chain.ChainPolicy.VerificationFlags = 
+                        chain.ChainPolicy.RevocationFlag = System.Security.Cryptography.X509Certificates.X509RevocationFlag.EntireChain;
+                        chain.ChainPolicy.RevocationMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck;
+                        chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
+                        chain.ChainPolicy.VerificationFlags = 
                                 System.Security.Cryptography.X509Certificates.X509VerificationFlags.AllowUnknownCertificateAuthority;
 
-                            if(!chain.Build(cert))
-                            {
-                                errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
-                            }
+                        if (!chain.Build(root)) {
+                            errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
+                        }
 
-                            var subject = cert.Subject;
-                            var subjectCn = cnRegex.Match(subject).Groups[1].Value;
+                        var subject = root.Subject;
+                        var subjectCn = cnRegex.Match(subject).Groups[1].Value;
 
-                            if(String.IsNullOrWhiteSpace(subjectCn) || subjectCn != hostname)
-                            {
-                                errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch;
-                            }
+                        if (String.IsNullOrWhiteSpace(subjectCn) || subjectCn != hostname) {
+                            errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch;
                         }
                     }
-
-                    serverCertificateCheck = ServicePointManager.ServerCertificateValidationCallback(this, cert, chain, errors);
                 }
 
-                if (ServicePointManager.ClientCipherSuitesCallback != null) {
-                    var protocol = session.Protocol.StartsWith("SSL", StringComparison.InvariantCulture) ? SecurityProtocolType.Ssl3 : SecurityProtocolType.Tls;
-                    var acceptedCiphers = ServicePointManager.ClientCipherSuitesCallback(protocol, new[] { session.CipherSuite });
-                    clientCipherSuitesCheck = acceptedCiphers.Contains(session.CipherSuite);
-                }
+                //call the delegate to validate
+                return ServicePointManager.ServerCertificateValidationCallback(this, root, chain, errors);
+            }
 
-                return serverCertificateCheck & clientCipherSuitesCheck;
+            /// <summary>
+            /// Verifies client ciphers and is only available in Mono and Xamarin products.
+            /// </summary>
+            /// <returns><c>true</c>, if client ciphers was verifyed, <c>false</c> otherwise.</returns>
+            /// <param name="hostname"></param>
+            /// <param name="session"></param>
+            bool VerifyClientCiphers(string hostname, ISSLSession session)
+            {
+                var callback = ServicePointManager.ClientCipherSuitesCallback;
+
+                if (callback == null) return true;
+
+                var protocol = session.Protocol.StartsWith("SSL", StringComparison.InvariantCulture) ? SecurityProtocolType.Ssl3 : SecurityProtocolType.Tls;
+
+                var acceptedCiphers = callback(protocol, new[] { session.CipherSuite });
+
+                return acceptedCiphers.Contains(session.CipherSuite);
             }
         }
 
