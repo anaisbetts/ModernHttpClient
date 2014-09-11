@@ -36,7 +36,7 @@ namespace ModernHttpClient
         readonly bool throwOnCaptiveNetwork;
         readonly bool customSSLVerification;
 
-        public NativeMessageHandler(): this(false) { }
+        public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification)
         {
             session = NSUrlSession.FromConfiguration(
