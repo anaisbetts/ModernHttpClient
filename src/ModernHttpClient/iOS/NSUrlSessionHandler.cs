@@ -7,6 +7,9 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Security;
+using System.Security.Cryptography.X509Certificates;
+using System.Text.RegularExpressions;
 
 namespace ModernHttpClient
 {
@@ -204,6 +207,77 @@ namespace ModernHttpClient
                 lock (This.inflightRequests) {
                     return This.inflightRequests[task];
                 }
+            }
+
+            static readonly Regex cnRegex = new Regex("CN=(.*?),.*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+
+            public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
+            {
+                if (challenge.ProtectionSpace.AuthenticationMethod != "NSURLAuthenticationMethodServerTrust") {
+                    goto doDefault;
+                }
+
+                if (ServicePointManager.ServerCertificateValidationCallback == null) {
+                    goto doDefault;
+                }
+
+                // Convert Mono Certificates to .NET certificates and build cert 
+                // chain from root certificate
+                var serverCertChain = challenge.ProtectionSpace.ServerSecTrust;
+                var chain = new X509Chain();
+                X509Certificate2 root = null;
+                var errors = SslPolicyErrors.None;
+
+                if (serverCertChain == null || serverCertChain.Count == 0) { 
+                    errors = SslPolicyErrors.RemoteCertificateNotAvailable;
+                    goto sslErrorVerify;
+                }
+
+                if (serverCertChain.Count == 1) {
+                    errors = SslPolicyErrors.RemoteCertificateChainErrors;
+                    goto sslErrorVerify;
+                }
+
+                var netCerts = Enumerable.Range(0, serverCertChain.Count)
+                    .Select(x => serverCertChain[x].ToX509Certificate2())
+                    .ToArray();
+
+                for (int i = 1; i < netCerts.Length; i++) {
+                    chain.ChainPolicy.ExtraStore.Add(netCerts[i]);
+                }
+
+                root = netCerts[0];
+
+                chain.ChainPolicy.RevocationFlag = X509RevocationFlag.EntireChain;
+                chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
+                chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
+                chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
+
+                if (!chain.Build(root)) {
+                    errors = SslPolicyErrors.RemoteCertificateChainErrors;
+                    goto sslErrorVerify;
+                }
+
+                var subject = root.Subject;
+                var subjectCn = cnRegex.Match(subject).Groups[1].Value;
+
+                if (String.IsNullOrWhiteSpace(subjectCn) || subjectCn != task.CurrentRequest.Url.Host) {
+                    errors = SslPolicyErrors.RemoteCertificateNameMismatch;
+                    goto sslErrorVerify;
+                }
+
+            sslErrorVerify:
+                bool result = ServicePointManager.ServerCertificateValidationCallback(this, root, chain, errors);
+                if (result) {
+                    completionHandler(NSUrlSessionAuthChallengeDisposition.UseCredential, null);
+                } else {
+                    completionHandler(NSUrlSessionAuthChallengeDisposition.RejectProtectionSpace, null);
+                }
+                return;
+
+            doDefault:
+                completionHandler(NSUrlSessionAuthChallengeDisposition.PerformDefaultHandling, challenge.ProposedCredential);
+                return;
             }
 
             Exception createExceptionForNSError(NSError error)
