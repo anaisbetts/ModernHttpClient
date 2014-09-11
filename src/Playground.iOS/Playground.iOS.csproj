@@ -57,6 +57,7 @@
     <MtouchI18n>
     </MtouchI18n>
     <MtouchArch>ARMv7</MtouchArch>
+    <MtouchSdkVersion>8.0</MtouchSdkVersion>
   </PropertyGroup>
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|iPhone' ">
     <DebugType>full</DebugType>
