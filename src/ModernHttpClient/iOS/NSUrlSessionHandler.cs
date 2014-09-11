@@ -34,15 +34,17 @@ namespace ModernHttpClient
             new Dictionary<HttpRequestMessage, ProgressDelegate>();
 
         readonly bool throwOnCaptiveNetwork;
+        readonly bool customSSLVerification;
 
         public NativeMessageHandler(): this(false) { }
-        public NativeMessageHandler(bool throwOnCaptiveNetwork)
+        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification)
         {
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
                 new DataTaskDelegate(this), null);
 
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+            this.customSSLVerification = customSSLVerification;
         }
 
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
@@ -213,6 +215,10 @@ namespace ModernHttpClient
 
             public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
             {
+                if (!This.customSSLVerification) {
+                    goto doDefault;
+                }
+
                 if (challenge.ProtectionSpace.AuthenticationMethod != "NSURLAuthenticationMethodServerTrust") {
                     goto doDefault;
                 }
