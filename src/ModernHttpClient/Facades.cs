@@ -24,7 +24,11 @@ namespace ModernHttpClient
         /// captive network (ie: a captive network is usually a wifi network
         /// where an authentication html form is shown instead of the real
         /// content).</param>
-        public NativeMessageHandler(bool throwOnCaptiveNetwork) : base()
+        /// <param name="customSSLVerification">Enable custom SSL certificate 
+        /// verification via ServicePointManager. Disabled by default for 
+        /// performance reasons (i.e. the OS default certificate verification 
+        /// will take place)</param>
+        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification) : base()
         {
         }
 
