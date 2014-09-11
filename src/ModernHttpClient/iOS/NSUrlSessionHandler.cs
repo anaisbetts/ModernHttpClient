@@ -488,7 +488,7 @@ namespace ModernHttpClient
     {
         Action onDispose;
 
-        public CancellableStreamContent(Stream source, Action onDispose) : base(source)
+        public CancellableStreamContent(Stream source, Action onDispose) : base(source, CancellationToken.None)
         {
             this.onDispose = onDispose;
         }

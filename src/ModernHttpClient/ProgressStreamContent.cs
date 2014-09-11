@@ -11,13 +11,13 @@ namespace ModernHttpClient
 
     public class ProgressStreamContent : StreamContent
     {
-        public ProgressStreamContent(Stream stream)
-            : this(new ProgressStream(stream))
+        public ProgressStreamContent(Stream stream, CancellationToken token)
+            : this(new ProgressStream(stream, token))
         {
         }
 
         public ProgressStreamContent(Stream stream, int bufferSize)
-            : this(new ProgressStream(stream), bufferSize)
+            : this(new ProgressStream(stream, CancellationToken.None), bufferSize)
         {
         }
 
@@ -89,7 +89,9 @@ namespace ModernHttpClient
 
         class ProgressStream : Stream
         {
-            public ProgressStream(Stream stream)
+            CancellationToken token;
+
+            public ProgressStream(Stream stream, CancellationToken token)
             {
                 ParentStream = stream;
 
@@ -130,6 +132,8 @@ namespace ModernHttpClient
 
             public override int Read(byte[] buffer, int offset, int count)
             {
+                token.ThrowIfCancellationRequested();
+
                 var readCount = ParentStream.Read(buffer, offset, count);
                 ReadCallback(readCount);
                 return readCount;
@@ -137,23 +141,29 @@ namespace ModernHttpClient
 
             public override long Seek(long offset, SeekOrigin origin)
             {
+                token.ThrowIfCancellationRequested();
                 return ParentStream.Seek(offset, origin);
             }
 
             public override void SetLength(long value)
             {
+                token.ThrowIfCancellationRequested();
                 ParentStream.SetLength(value);
             }
 
             public override void Write(byte[] buffer, int offset, int count)
             {
+                token.ThrowIfCancellationRequested();
                 ParentStream.Write(buffer, offset, count);
                 WriteCallback(count);
             }
 
             public override async Task<int> ReadAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                var readCount = await ParentStream.ReadAsync(buffer, offset, count, cancellationToken);
+                token.ThrowIfCancellationRequested();
+                var linked = CancellationTokenSource.CreateLinkedTokenSource(token, cancellationToken);
+
+                var readCount = await ParentStream.ReadAsync(buffer, offset, count, linked.Token);
 
                 ReadCallback(readCount);
                 return readCount;
@@ -161,7 +171,10 @@ namespace ModernHttpClient
 
             public override Task WriteAsync(byte[] buffer, int offset, int count, CancellationToken cancellationToken)
             {
-                var task = ParentStream.WriteAsync(buffer, offset, count, cancellationToken);
+                token.ThrowIfCancellationRequested();
+
+                var linked = CancellationTokenSource.CreateLinkedTokenSource(token, cancellationToken);
+                var task = ParentStream.WriteAsync(buffer, offset, count, linked.Token);
 
                 WriteCallback(count);
                 return task;
