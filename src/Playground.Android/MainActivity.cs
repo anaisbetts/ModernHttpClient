@@ -14,6 +14,7 @@ using System.Security.Cryptography;
 using System.Text;
 using System.Net;
 using System.Linq;
+using System.IO;
 
 namespace Playground.Android
 {
@@ -107,7 +108,12 @@ namespace Playground.Android
                         Console.WriteLine("{0}: {1}", v.Key, String.Join(",", v.Value));
                     }
 
-                    var bytes = await resp.Content.ReadAsByteArrayAsync();
+                    var stream = await resp.Content.ReadAsStreamAsync();
+
+                    var ms = new MemoryStream();
+                    await stream.CopyToAsync(ms, 4096, currentToken.Token);
+                    var bytes = ms.ToArray();
+
                     result.Text = String.Format("Read {0} bytes", bytes.Length);
 
                     var md5 = MD5.Create();
