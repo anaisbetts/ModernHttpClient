@@ -8,6 +8,7 @@ using System.Net.Http;
 using OkHttp;
 using Javax.Net.Ssl;
 using System.Text.RegularExpressions;
+using Java.IO;
 
 namespace ModernHttpClient
 {
@@ -19,12 +20,13 @@ namespace ModernHttpClient
         readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks =
             new Dictionary<HttpRequestMessage, WeakReference>();
 
-        public NativeMessageHandler() : this(false) {}
+        public NativeMessageHandler() : this(false, false) {}
 
-        public NativeMessageHandler(bool throwOnCaptiveNetwork)
+        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
-            client.SetHostnameVerifier(new HostnameVerifier());
+
+            if (customSSLVerification) client.SetHostnameVerifier(new HostnameVerifier());
         }
 
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
@@ -82,16 +84,26 @@ namespace ModernHttpClient
 
             var rq = builder.Build();
             var call = client.NewCall(rq);
-            cancellationToken.Register(call.Cancel);
+            cancellationToken.Register(() => call.Cancel());
 
-            var resp = await call.EnqueueAsync().ConfigureAwait(false);
+            var resp = default(Response);
+            try {
+                resp = await call.EnqueueAsync().ConfigureAwait(false);
+            } catch (IOException ex) {
+                if (ex.Message.ToLowerInvariant().Contains("canceled")) {
+                    throw new OperationCanceledException();
+                }
+
+                throw;
+            }
+
             var respBody = resp.Body();
 
             cancellationToken.ThrowIfCancellationRequested();
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.Code());
             if (respBody != null) {
-                var content = new ProgressStreamContent(respBody.ByteStream());
+                var content = new ProgressStreamContent(respBody.ByteStream(), cancellationToken);
                 content.Progress = getAndRemoveCallbackFromRegister(request);
                 ret.Content = content;
             } else {
