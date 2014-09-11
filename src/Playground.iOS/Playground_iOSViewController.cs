@@ -10,6 +10,8 @@ using System.Text;
 using System.Security.Cryptography;
 using System.Threading.Tasks;
 using Newtonsoft.Json;
+using System.Net;
+using System.Linq;
 
 namespace Playground.iOS
 {
@@ -28,6 +30,25 @@ namespace Playground.iOS
                 result.EnsureSuccessStatusCode();
             });
             */
+
+            //This API is only available in Mono and Xamarin products.
+            //You can filter and/or re-order the ciphers suites that the SSL/TLS server will accept from a client.
+            //The following example removes weak (export) ciphers from the list that will be offered to the server.
+            ServicePointManager.ClientCipherSuitesCallback += (protocol, allCiphers) =>
+                allCiphers.Where(x => !x.Contains("EXPORT")).ToList();
+
+            //Here we accept any certificate and just print the cert's data.
+            ServicePointManager.ServerCertificateValidationCallback += (sender, certificate, chain, sslPolicyErrors) => {
+                System.Diagnostics.Debug.WriteLine("Callback Server Certificate: " + sslPolicyErrors);
+
+                foreach(var el in chain.ChainElements) {
+                    System.Diagnostics.Debug.WriteLine(el.Certificate.GetCertHashString());
+                    System.Diagnostics.Debug.WriteLine(el.Information);
+                }
+
+                return true;
+            };
+
         }
 
         CancellationTokenSource currentToken;
@@ -59,8 +80,8 @@ namespace Playground.iOS
 
             st.Start();
             try {
-                //var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
-                var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
+                var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
+                //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
 
                 var request = new HttpRequestMessage(HttpMethod.Get, url);
                 handler.RegisterForProgress(request, HandleDownloadProgress);
