@@ -2,7 +2,6 @@ using System;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
-using MonoTouch.Foundation;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
@@ -10,6 +9,12 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+
+#if UNIFIED
+using Foundation;
+#else
+using MonoTouch.Foundation;
+#endif
 
 namespace ModernHttpClient
 {
@@ -149,7 +154,9 @@ namespace ModernHttpClient
 
                     content.Progress = data.Progress;
 
-                    var ret = new HttpResponseMessage((HttpStatusCode)resp.StatusCode) {
+                    // NB: The double cast is because of a Xamarin compiler bug
+                    int status = (int)resp.StatusCode;
+                    var ret = new HttpResponseMessage((HttpStatusCode)status) {
                         Content = content,
                         RequestMessage = data.Request,
                     };
