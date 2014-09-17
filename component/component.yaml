@@ -23,8 +23,6 @@ libraries:
 samples: 
   - name: "HttpClient.iOS Classic API Sample"
     path: ../samples/HttpClient.iOS/HttpClient.iOS.sln
-  - name: "HttpClient.iOS Unified API Sample"
-    path: ../samples/HttpClient.iOS64/HttpClient.iOS64.sln
   - name: "HttpClient.Android Sample"
     path: ../samples/HttpClient.Android/HttpClient.Android.sln
 ...
