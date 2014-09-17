@@ -64,6 +64,9 @@
     <Reference Include="Xamarin.iOS" />
     <Reference Include="System.Xml.Linq" />
     <Reference Include="System.Net.Http" />
+    <Reference Include="ModernHttpClient">
+      <HintPath>..\..\build\Xamarin.iOS10\ModernHttpClient.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <ItemGroup>
     <Compile Include="MainWindow.xib.designer.cs">
@@ -104,11 +107,5 @@
   </ItemGroup>
   <ItemGroup>
     <ITunesArtwork Include="Resources\iTunesArtwork.png" />
-  </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\..\src\ModernHttpClient\ModernHttpClient.iOS64.csproj">
-      <Project>{6941F069-AC02-40EE-BBF3-9FE3331030EF}</Project>
-      <Name>ModernHttpClient.iOS64</Name>
-    </ProjectReference>
   </ItemGroup>
 </Project>
