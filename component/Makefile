@@ -14,6 +14,8 @@ clean:
 	$(MAKE) -w -C .. clean
 	$(MDTOOL) build -t:Clean -c:Release ../samples/HttpClient.iOS/HttpClient.iOS.sln
 	rm -rf ../samples/HttpClient.iOS/bin ../samples/HttpClient.iOS/obj
+	$(MDTOOL) build -t:Clean -c:Release ../samples/HttpClient.iOS64/HttpClient.iOS64.sln
+	rm -rf ../samples/HttpClient.iOS/bin ../samples/HttpClient.iOS64/obj
 	$(MDTOOL) build -t:Clean -c:Release ../samples/HttpClient.Android/HttpClient.Android.sln
 	rm -rf ../samples/HttpClient.Android/bin ../samples/HttpClient.Android/obj
 	rm -f $(xamfile)
