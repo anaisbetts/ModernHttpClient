@@ -90,7 +90,7 @@ namespace ModernHttpClient
                 Body = NSData.FromArray(ms.ToArray()),
                 CachePolicy = NSUrlRequestCachePolicy.UseProtocolCachePolicy,
                 Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
-                    acc.Add(new NSString(x.Key), new NSString(x.Value.LastOrDefault()));
+                    acc.Add(new NSString(x.Key), new NSString(String.Join(",", x.Value)));
                     return acc;
                 }),
                 HttpMethod = request.Method.ToString().ToUpperInvariant(),

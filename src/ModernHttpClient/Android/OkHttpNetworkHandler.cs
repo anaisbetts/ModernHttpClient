@@ -75,10 +75,9 @@ namespace ModernHttpClient
             var keyValuePairs = request.Headers
                 .Union(request.Content != null ?
                     (IEnumerable<KeyValuePair<string, IEnumerable<string>>>)request.Content.Headers :
-                    Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>())
-                .SelectMany(x => x.Value.Select(val => new { Key = x.Key, Value = val }));
+                    Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>());
 
-            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, kvp.Value);
+            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, String.Join(",", kvp.Value));
 
             cancellationToken.ThrowIfCancellationRequested();
 
