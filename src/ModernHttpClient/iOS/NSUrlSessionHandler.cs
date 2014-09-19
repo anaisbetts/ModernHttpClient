@@ -294,7 +294,7 @@ namespace ModernHttpClient
                 return;
             }
 
-            static bool Match(string hostname, string pattern)
+            static bool match(string hostname, string pattern)
             {
                 // check if this is a pattern
                 int index = pattern.IndexOf('*');
