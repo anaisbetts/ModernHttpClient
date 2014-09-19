@@ -10,6 +10,7 @@ using Javax.Net.Ssl;
 using System.Text.RegularExpressions;
 using Java.IO;
 using System.Security.Cryptography.X509Certificates;
+using System.Globalization;
 
 namespace ModernHttpClient
 {
@@ -76,10 +77,9 @@ namespace ModernHttpClient
             var keyValuePairs = request.Headers
                 .Union(request.Content != null ?
                     (IEnumerable<KeyValuePair<string, IEnumerable<string>>>)request.Content.Headers :
-                    Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>())
-                .SelectMany(x => x.Value.Select(val => new { Key = x.Key, Value = val }));
+                    Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>());
 
-            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, kvp.Value);
+            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, String.Join(",", kvp.Value));
 
             cancellationToken.ThrowIfCancellationRequested();
 
@@ -155,7 +155,7 @@ namespace ModernHttpClient
 
     class HostnameVerifier : Java.Lang.Object, IHostnameVerifier
     {
-        static readonly Regex cnRegex = new Regex("CN=(.*?),.*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+        static readonly Regex cnRegex = new Regex(@"CN\s*=\s*([^,]*)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
 
         public bool Verify(string hostname, ISSLSession session)
         {
@@ -214,7 +214,7 @@ namespace ModernHttpClient
             var subject = root.Subject;
             var subjectCn = cnRegex.Match(subject).Groups[1].Value;
 
-            if (String.IsNullOrWhiteSpace(subjectCn) || subjectCn != hostname) {
+            if (String.IsNullOrWhiteSpace(subjectCn) || !Utility.MatchHostnameToPattern(hostname, subjectCn)) {
                 errors = System.Net.Security.SslPolicyErrors.RemoteCertificateNameMismatch;
                 goto bail;
             }

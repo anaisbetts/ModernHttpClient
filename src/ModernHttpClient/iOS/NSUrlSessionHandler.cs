@@ -14,6 +14,7 @@ using System.Text.RegularExpressions;
 using Foundation;
 #else
 using MonoTouch.Foundation;
+using System.Globalization;
 #endif
 
 namespace ModernHttpClient
@@ -90,7 +91,7 @@ namespace ModernHttpClient
                 Body = NSData.FromArray(ms.ToArray()),
                 CachePolicy = NSUrlRequestCachePolicy.UseProtocolCachePolicy,
                 Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
-                    acc.Add(new NSString(x.Key), new NSString(x.Value.LastOrDefault()));
+                    acc.Add(new NSString(x.Key), new NSString(String.Join(",", x.Value)));
                     return acc;
                 }),
                 HttpMethod = request.Method.ToString().ToUpperInvariant(),
@@ -218,7 +219,7 @@ namespace ModernHttpClient
                 }
             }
 
-            static readonly Regex cnRegex = new Regex("CN=(.*?),.*", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+            static readonly Regex cnRegex = new Regex(@"CN\s*=\s*([^,]*)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
 
             public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
             {
@@ -274,7 +275,7 @@ namespace ModernHttpClient
                 var subject = root.Subject;
                 var subjectCn = cnRegex.Match(subject).Groups[1].Value;
 
-                if (String.IsNullOrWhiteSpace(subjectCn) || subjectCn != task.CurrentRequest.Url.Host) {
+                if (String.IsNullOrWhiteSpace(subjectCn) || !Utility.MatchHostnameToPattern(task.CurrentRequest.Url.Host, subjectCn)) {
                     errors = SslPolicyErrors.RemoteCertificateNameMismatch;
                     goto sslErrorVerify;
                 }

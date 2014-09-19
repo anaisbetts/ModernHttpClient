@@ -57,6 +57,7 @@
     <Reference Include="OkHttp">
       <HintPath>..\..\vendor\okhttp\OkHttp.dll</HintPath>
     </Reference>
+    <Compile Include="Utility.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
