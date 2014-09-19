@@ -275,7 +275,7 @@ namespace ModernHttpClient
                 var subject = root.Subject;
                 var subjectCn = cnRegex.Match(subject).Groups[1].Value;
 
-                if (String.IsNullOrWhiteSpace(subjectCn) || !Match(task.CurrentRequest.Url.Host, subjectCn)) {
+                if (String.IsNullOrWhiteSpace(subjectCn) || !match(task.CurrentRequest.Url.Host, subjectCn)) {
                     errors = SslPolicyErrors.RemoteCertificateNameMismatch;
                     goto sslErrorVerify;
                 }
