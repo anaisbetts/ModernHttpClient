@@ -9,6 +9,7 @@ using OkHttp;
 using Javax.Net.Ssl;
 using System.Text.RegularExpressions;
 using Java.IO;
+using System.Security.Cryptography.X509Certificates;
 
 namespace ModernHttpClient
 {

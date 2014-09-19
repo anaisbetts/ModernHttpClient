@@ -282,7 +282,9 @@ namespace ModernHttpClient
             sslErrorVerify:
                 bool result = ServicePointManager.ServerCertificateValidationCallback(this, root, chain, errors);
                 if (result) {
-                    completionHandler(NSUrlSessionAuthChallengeDisposition.UseCredential, null);
+                    completionHandler(
+                        NSUrlSessionAuthChallengeDisposition.UseCredential,
+                        NSUrlCredential.FromTrust(challenge.ProtectionSpace.ServerSecTrust));
                 } else {
                     completionHandler(NSUrlSessionAuthChallengeDisposition.RejectProtectionSpace, null);
                 }
