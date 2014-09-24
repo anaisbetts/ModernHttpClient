@@ -14,7 +14,7 @@ using System.Globalization;
 
 namespace ModernHttpClient
 {
-    public class NativeMessageHandler : HttpMessageHandler
+    public class NativeMessageHandler : HttpClientHandler
     {
         readonly OkHttpClient client = new OkHttpClient();
         readonly bool throwOnCaptiveNetwork;

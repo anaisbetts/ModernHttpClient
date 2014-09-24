@@ -29,7 +29,7 @@ namespace ModernHttpClient
         public bool IsCompleted { get; set; }
     }
 
-    public class NativeMessageHandler : HttpMessageHandler
+    public class NativeMessageHandler : HttpClientHandler
     {
         readonly NSUrlSession session;
 
