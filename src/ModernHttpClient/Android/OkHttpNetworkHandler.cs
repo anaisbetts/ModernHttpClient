@@ -90,6 +90,13 @@ namespace ModernHttpClient
             var resp = default(Response);
             try {
                 resp = await call.EnqueueAsync().ConfigureAwait(false);
+                var newReq = resp.Request();
+                var newUri = newReq == null ? null : newReq.Uri();
+                if (throwOnCaptiveNetwork && newUri != null) {
+                    if (url.Host != newUri.Host) {
+                        throw new CaptiveNetworkException(new Uri(java_uri), new Uri(newUri.ToString()));
+                    }
+                }
             } catch (IOException ex) {
                 if (ex.Message.ToLowerInvariant().Contains("canceled")) {
                     throw new OperationCanceledException();
