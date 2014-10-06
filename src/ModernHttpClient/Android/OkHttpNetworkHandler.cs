@@ -110,6 +110,7 @@ namespace ModernHttpClient
             cancellationToken.ThrowIfCancellationRequested();
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.Code());
+            ret.ReasonPhrase = resp.Message();
             if (respBody != null) {
                 var content = new ProgressStreamContent(respBody.ByteStream(), cancellationToken);
                 content.Progress = getAndRemoveCallbackFromRegister(request);
