@@ -58,6 +58,7 @@
       <HintPath>..\..\vendor\okhttp\OkHttp.dll</HintPath>
     </Reference>
     <Compile Include="Utility.cs" />
+    <Compile Include="CaptiveNetworkException.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
