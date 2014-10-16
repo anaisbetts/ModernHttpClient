@@ -11,6 +11,7 @@ using System.Text.RegularExpressions;
 using Java.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Globalization;
+using Android.OS;
 
 namespace ModernHttpClient
 {
@@ -85,7 +86,9 @@ namespace ModernHttpClient
 
             var rq = builder.Build();
             var call = client.NewCall(rq);
-            cancellationToken.Register(() => call.Cancel());
+
+            // NB: Even closing a socket must be done off the UI thread. Cray!
+            cancellationToken.Register(() => Task.Run(() => call.Cancel()));
 
             var resp = default(Response);
             try {
