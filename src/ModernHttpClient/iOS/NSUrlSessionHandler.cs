@@ -287,7 +287,7 @@ namespace ModernHttpClient
                         NSUrlSessionAuthChallengeDisposition.UseCredential,
                         NSUrlCredential.FromTrust(challenge.ProtectionSpace.ServerSecTrust));
                 } else {
-                    completionHandler(NSUrlSessionAuthChallengeDisposition.RejectProtectionSpace, null);
+                    completionHandler(NSUrlSessionAuthChallengeDisposition.CancelAuthenticationChallenge, null);
                 }
                 return;
 
