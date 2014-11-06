@@ -29,3 +29,10 @@ Library, and it will use the correct version on all platforms.
 ```sh
 make
 ```
+
+## Why doesn't this build in Xamarin Studio? What gives?
+
+```sh
+## Run this first
+make
+```
