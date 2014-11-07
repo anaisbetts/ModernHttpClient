@@ -78,4 +78,7 @@
       <Name>ModernHttpClient.Android</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup>
+    <AndroidAsset Include="Assets\githublogo.png" />
+  </ItemGroup>
 </Project>
