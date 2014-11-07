@@ -1,4 +1,6 @@
 using System;
+using System.Net.Http.Headers;
+using System.Security.Policy;
 using Android.App;
 using Android.Content;
 using Android.Runtime;
@@ -69,7 +71,8 @@ namespace Playground.Android
 
             // Get our button from the layout resource,
             // and attach an event to it
-            var button = FindViewById<Button>(Resource.Id.doIt);
+            var downloadButton = FindViewById<Button>(Resource.Id.doIt);
+            var uploadButton = FindViewById<Button>(Resource.Id.upload);
             var cancel = FindViewById<Button>(Resource.Id.cancelButton);
             var result = FindViewById<TextView>(Resource.Id.result);
             var hashView = FindViewById<TextView>(Resource.Id.md5sum);
@@ -84,7 +87,7 @@ namespace Playground.Android
                 if (resp != null) resp.Content.Dispose();
             };
 
-            button.Click += async (o, e) => {
+            downloadButton.Click += async (o, e) => {
                 var handler = new NativeMessageHandler();
                 var client = new HttpClient(handler);
 
@@ -123,6 +126,52 @@ namespace Playground.Android
                 } catch (Exception ex) {
                     result.Text = ex.ToString();
                 } finally {
+                    st.Stop();
+                    result.Text = (result.Text ?? "") + String.Format("\n\nTook {0} milliseconds", st.ElapsedMilliseconds);
+                }
+            };
+            uploadButton.Click += async (o, e) =>
+            {
+                var handler = new NativeMessageHandler();
+                var client = new HttpClient(handler);
+
+                currentToken = new CancellationTokenSource();
+                var st = new Stopwatch();
+
+                st.Start();
+                try
+                {
+                    var fileName = "githublogo.png";
+                    var url = "http://imagebin.ca/upload.php";
+
+                    var request = new HttpRequestMessage(HttpMethod.Get, url);
+                    handler.RegisterForProgress(request, HandleDownloadProgress);
+
+                    var streamContent = new StreamContent(Assets.Open(fileName));
+                    streamContent.Headers.ContentDisposition = new ContentDispositionHeaderValue("form-data");
+                    streamContent.Headers.ContentDisposition.Name = "\"file\"";
+                    streamContent.Headers.ContentDisposition.FileName = "\"" + fileName + "\"";
+                    streamContent.Headers.ContentType = new MediaTypeHeaderValue("application/octet-stream");
+
+                    string boundary = Guid.NewGuid().ToString();
+                    var content = new MultipartFormDataContent(boundary);
+                    content.Headers.Remove("Content-Type");
+                    content.Headers.TryAddWithoutValidation("Content-Type", "multipart/form-data; boundary=" + boundary);
+                    content.Add(streamContent);
+
+                    var response = await client.PostAsync(new Uri(url), content, currentToken.Token);
+                    response.EnsureSuccessStatusCode();
+
+                    string resultStr = await response.Content.ReadAsStringAsync();
+                    result.Text = String.Format("Uploaded file {0}, status code {1}, text {2}", fileName, response.StatusCode, resultStr);
+                    streamContent.Dispose();
+                }
+                catch (Exception ex)
+                {
+                    result.Text = ex.ToString();
+                }
+                finally
+                {
                     st.Stop();
                     result.Text = (result.Text ?? "") + String.Format("\n\nTook {0} milliseconds", st.ElapsedMilliseconds);
                 }

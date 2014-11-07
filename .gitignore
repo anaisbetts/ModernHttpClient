@@ -3,5 +3,5 @@ bin/
 obj/
 build/
 *.userprefs
-build/
 *.xam
+*.suo

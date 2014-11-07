@@ -1,5 +1,6 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <resources>
 	<string name="hello">Download some stuff</string>
+    <string name="uploadButton">Upload some stuff</string>
 	<string name="app_name">Playground.Android</string>
 </resources>
