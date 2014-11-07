@@ -68,7 +68,9 @@ namespace ModernHttpClient
             var body = default(RequestBody);
             if (request.Content != null) {
                 var bytes = await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
-                body = RequestBody.Create(MediaType.Parse(request.Content.Headers.ContentType.MediaType), bytes);
+
+                var contentType = String.Join (" ", request.Content.Headers.GetValues ("Content-Type"));
+                body = RequestBody.Create(MediaType.Parse(contentType), bytes);
             }
 
             var builder = new Request.Builder()
