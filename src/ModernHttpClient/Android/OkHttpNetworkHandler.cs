@@ -115,6 +115,7 @@ namespace ModernHttpClient
             cancellationToken.ThrowIfCancellationRequested();
 
             var ret = new HttpResponseMessage((HttpStatusCode)resp.Code());
+            ret.RequestMessage = request;
             ret.ReasonPhrase = resp.Message();
             if (respBody != null) {
                 var content = new ProgressStreamContent(respBody.ByteStream(), cancellationToken);
