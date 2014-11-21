@@ -315,7 +315,7 @@ namespace ModernHttpClient
             Uri UriFromNSUrlProtectionSpace (NSUrlProtectionSpace pSpace)
             {
                 var builder = new UriBuilder(pSpace.Protocol, pSpace.Host);
-                builder.Port = pSpace.Port;
+                builder.Port = (int)pSpace.Port;
                 Uri retval;
                 try {
                     retval = builder.Uri;
