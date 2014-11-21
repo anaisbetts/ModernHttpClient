@@ -38,5 +38,5 @@ ModernHttpClient.Portable.dll:
 
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
-	rm *.dll
+	rm -f *.dll
 	rm -rf build
