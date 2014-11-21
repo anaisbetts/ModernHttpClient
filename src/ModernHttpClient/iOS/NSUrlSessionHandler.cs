@@ -292,8 +292,47 @@ namespace ModernHttpClient
                 return;
 
             doDefault:
+                if (null != This.Credentials) {
+                    var authenticationType = AuthenticationTypeFromAuthenticationMethod(challenge.ProtectionSpace.AuthenticationMethod);
+                    var uri = UriFromNSUrlProtectionSpace(challenge.ProtectionSpace);
+                    if (null != authenticationType && null != uri) {
+                        var specifedCredential = This.Credentials.GetCredential(uri, authenticationType);
+                        if (null != specifedCredential &&
+                            null != specifedCredential.UserName && null != specifedCredential.Password) {
+                            var credential = new NSUrlCredential(
+                                specifedCredential.UserName,
+                                specifedCredential.Password,
+                                NSUrlCredentialPersistence.ForSession);
+                            completionHandler(NSUrlSessionAuthChallengeDisposition.UseCredential, credential);
+                            return;
+                        }
+                    }
+                }
                 completionHandler(NSUrlSessionAuthChallengeDisposition.PerformDefaultHandling, challenge.ProposedCredential);
                 return;
+            }
+
+            Uri UriFromNSUrlProtectionSpace (NSUrlProtectionSpace pSpace)
+            {
+                var builder = new UriBuilder(pSpace.Protocol, pSpace.Host);
+                builder.Port = pSpace.Port;
+                Uri retval;
+                try {
+                    retval = builder.Uri;
+                } catch (UriFormatException) {
+                    retval = null;
+                }
+                return retval;
+            }
+
+            string AuthenticationTypeFromAuthenticationMethod (string method)
+            {
+                if (NSUrlProtectionSpace.AuthenticationMethodDefault == method ||
+                    NSUrlProtectionSpace.AuthenticationMethodHTTPBasic == method) {
+                    return "Basic";
+                } else {
+                    return null;
+                }
             }
 
             Exception createExceptionForNSError(NSError error)
