@@ -128,6 +128,15 @@ namespace ModernHttpClient
                 this.This = that;
             }
 
+            public override void WillPerformHttpRedirection(NSUrlSession session, NSUrlSessionTask task, NSHttpUrlResponse response, NSUrlRequest newRequest, Action<NSUrlRequest> completionHandler)
+            {
+                if (this.This.AllowAutoRedirect) {
+                    completionHandler(newRequest);
+                } else {
+                    completionHandler(null);
+                }
+            }
+
             public override void DidReceiveResponse(NSUrlSession session, NSUrlSessionDataTask dataTask, NSUrlResponse response, Action<NSUrlSessionResponseDisposition> completionHandler)
             {
                 var data = getResponseForTask(dataTask);
