@@ -170,8 +170,9 @@ namespace ModernHttpClient
                         ret.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
                         ret.Content.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
                     }
-
-                    data.FutureResponse.TrySetResult(ret);
+                    // NB: The awaiting code can synchronously call read, which will block, and we'll
+                    // never get a didReceiveData, because we have not returned from DidReceiveResponse.
+                    Task.Run (() => { data.FutureResponse.TrySetResult(ret); });
                 } catch (Exception ex) {
                     data.FutureResponse.TrySetException(ex);
                 }
