@@ -59,6 +59,7 @@
     </Reference>
     <Compile Include="Utility.cs" />
     <Compile Include="CaptiveNetworkException.cs" />
+    <Compile Include="Android\NativeCookieHandler.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>

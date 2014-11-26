@@ -25,7 +25,7 @@ namespace ModernHttpClient
 
         public NativeMessageHandler() : this(false, false) {}
 
-        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification)
+        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
 
