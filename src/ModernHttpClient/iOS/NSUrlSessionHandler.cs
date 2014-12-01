@@ -27,6 +27,7 @@ namespace ModernHttpClient
         public ByteArrayListStream ResponseBody { get; set; }
         public CancellationToken CancellationToken { get; set; }
         public bool IsCompleted { get; set; }
+        public NetworkCredential PresentedCredential { get; set; }
     }
 
     public class NativeMessageHandler : HttpClientHandler
@@ -307,13 +308,19 @@ namespace ModernHttpClient
                     var uri = UriFromNSUrlProtectionSpace(challenge.ProtectionSpace);
                     if (null != authenticationType && null != uri) {
                         var specifedCredential = This.Credentials.GetCredential(uri, authenticationType);
+                        var state = getResponseForTask (task);
                         if (null != specifedCredential &&
                             null != specifedCredential.UserName && null != specifedCredential.Password) {
-                            var credential = new NSUrlCredential(
-                                specifedCredential.UserName,
-                                specifedCredential.Password,
-                                NSUrlCredentialPersistence.ForSession);
-                            completionHandler(NSUrlSessionAuthChallengeDisposition.UseCredential, credential);
+                            if (specifedCredential == state.PresentedCredential) {
+                                completionHandler (NSUrlSessionAuthChallengeDisposition.UseCredential, null);
+                            } else {
+                                state.PresentedCredential = specifedCredential;
+                                var credential = new NSUrlCredential (
+                                                 specifedCredential.UserName,
+                                                 specifedCredential.Password,
+                                                 NSUrlCredentialPersistence.ForSession);
+                                completionHandler (NSUrlSessionAuthChallengeDisposition.UseCredential, credential);
+                            }
                             return;
                         }
                     }
