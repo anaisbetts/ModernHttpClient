@@ -82,7 +82,12 @@ namespace ModernHttpClient
                     (IEnumerable<KeyValuePair<string, IEnumerable<string>>>)request.Content.Headers :
                     Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>());
 
-            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, String.Join(" ", kvp.Value));
+            foreach (var kvp in keyValuePairs)  {
+                if (kvp.Key == "user-agent")
+                    builder.AddHeader(kvp.Key, String.Join(" ", kvp.Value));
+                else
+                    builder.AddHeader(kvp.Key, String.Join(",", kvp.Value));
+            }
 
             cancellationToken.ThrowIfCancellationRequested();
 
