@@ -22,6 +22,10 @@ namespace ModernHttpClient
 
         readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks =
             new Dictionary<HttpRequestMessage, WeakReference>();
+        readonly Dictionary<string, string> headerSeparators = 
+            new Dictionary<string,string>(){ 
+                {"User-Agent", " "}
+            };
 
         public NativeMessageHandler() : this(false, false) {}
 
@@ -60,6 +64,13 @@ namespace ModernHttpClient
             }
         }
 
+        private string GetHeaderSeparator(string name)
+        {
+            if (headerSeparators.ContainsKey(name))
+                return headerSeparators[name];
+            return ",";
+        }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var java_uri = request.RequestUri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
@@ -82,7 +93,7 @@ namespace ModernHttpClient
                     (IEnumerable<KeyValuePair<string, IEnumerable<string>>>)request.Content.Headers :
                     Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>());
 
-            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, String.Join(",", kvp.Value));
+            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, String.Join(GetHeaderSeparator(kvp.Key), kvp.Value));
 
             cancellationToken.ThrowIfCancellationRequested();
 

@@ -91,6 +91,8 @@ namespace Playground.Android
                 currentToken = new CancellationTokenSource();
                 var st = new Stopwatch();
 
+                client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("ModernHttpClient", "1.0"));
+                client.DefaultRequestHeaders.UserAgent.Add(new System.Net.Http.Headers.ProductInfoHeaderValue("MyTest", "2.0"));
                 st.Start();
                 try {
                     var url = "https://tv.eurosport.com";
