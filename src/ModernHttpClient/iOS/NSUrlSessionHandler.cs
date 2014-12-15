@@ -39,6 +39,11 @@ namespace ModernHttpClient
         readonly Dictionary<HttpRequestMessage, ProgressDelegate> registeredProgressCallbacks = 
             new Dictionary<HttpRequestMessage, ProgressDelegate>();
 
+        readonly Dictionary<string, string> headerSeparators =
+            new Dictionary<string, string>(){ 
+                {"User-Agent", " "}
+            };
+
         readonly bool throwOnCaptiveNetwork;
         readonly bool customSSLVerification;
 
@@ -51,6 +56,13 @@ namespace ModernHttpClient
 
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
+        }
+
+        private string GetHeaderSeparator(string name)
+        {
+            if (headerSeparators.ContainsKey(name))
+                return headerSeparators[name];
+            return ",";
         }
 
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
@@ -91,7 +103,7 @@ namespace ModernHttpClient
                 Body = NSData.FromArray(ms.ToArray()),
                 CachePolicy = NSUrlRequestCachePolicy.UseProtocolCachePolicy,
                 Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
-                    acc.Add(new NSString(x.Key), new NSString(String.Join(",", x.Value)));
+                    acc.Add(new NSString(x.Key), new NSString(String.Join(GetHeaderSeparator(x.Key), x.Value)));
                     return acc;
                 }),
                 HttpMethod = request.Method.ToString().ToUpperInvariant(),
