@@ -1,7 +1,7 @@
 %YAML 1.2
 ---
 name: ModernHttpClient
-version: 2.1.4
+version: 2.1.5
 id: "modernhttpclient"
 publisher: Paul Betts
 publisher-url: http://blog.paulbetts.org/
@@ -21,7 +21,7 @@ libraries:
     - ../build/MonoAndroid/OkHttp.dll
     - ../build/MonoAndroid/ModernHttpClient.dll
 samples: 
-  - name: "HttpClient.iOS Classic API Sample"
+  - name: "HttpClient.iOS Unified API Sample"
     path: ../samples/HttpClient.iOS/HttpClient.iOS.sln
   - name: "HttpClient.Android Sample"
     path: ../samples/HttpClient.Android/HttpClient.Android.sln
