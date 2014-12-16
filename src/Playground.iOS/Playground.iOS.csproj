@@ -126,7 +126,6 @@
     <InterfaceDefinition Include="Playground_iOSViewController.xib" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>
     <ProjectReference Include="..\ModernHttpClient\ModernHttpClient.iOS64.csproj">
       <Project>{6941F069-AC02-40EE-BBF3-9FE3331030EF}</Project>
