@@ -4,7 +4,7 @@
 // actions made in the UI designer. If it is removed, they will be lost.
 // Manual changes to this file may not be handled correctly.
 //
-using MonoTouch.Foundation;
+using Foundation;
 using System.CodeDom.Compiler;
 
 namespace Playground.iOS
@@ -13,19 +13,19 @@ namespace Playground.iOS
 	partial class Playground_iOSViewController
 	{
         [Outlet]
-        MonoTouch.UIKit.UIProgressView progress { get; set; }
+        UIKit.UIProgressView progress { get; set; }
 
 		[Outlet]
-		MonoTouch.UIKit.UILabel md5sum { get; set; }
+		UIKit.UILabel md5sum { get; set; }
 
 		[Outlet]
-		MonoTouch.UIKit.UITextView result { get; set; }
+		UIKit.UITextView result { get; set; }
 
 		[Action ("cancelIt:")]
-		partial void cancelIt (MonoTouch.Foundation.NSObject sender);
+		partial void cancelIt (Foundation.NSObject sender);
 
 		[Action ("doIt:")]
-		partial void doIt (MonoTouch.Foundation.NSObject sender);
+		partial void doIt (Foundation.NSObject sender);
 		
 		void ReleaseDesignerOutlets ()
 		{
