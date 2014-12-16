@@ -68,7 +68,7 @@
     <Reference Include="System.Net.Http" />
     <Reference Include="Xamarin.iOS" />
     <Reference Include="ModernHttpClient">
-      <HintPath>..\..\src\ModernHttpClient\bin\Debug\Xamarin.iOS10\ModernHttpClient.dll</HintPath>
+      <HintPath>..\..\build\Xamarin.iOS10\ModernHttpClient.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
