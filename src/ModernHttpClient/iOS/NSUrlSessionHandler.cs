@@ -345,7 +345,10 @@ namespace ModernHttpClient
             string AuthenticationTypeFromAuthenticationMethod (string method)
             {
                 if (NSUrlProtectionSpace.AuthenticationMethodDefault == method ||
-                    NSUrlProtectionSpace.AuthenticationMethodHTTPBasic == method) {
+                    NSUrlProtectionSpace.AuthenticationMethodHTTPBasic == method ||
+                    NSUrlProtectionSpace.AuthenticationMethodNTLM == method ||
+                    NSUrlProtectionSpace.AuthenticationMethodHTTPDigest == method) {
+                    // Use Basic as a way to get the user+pass cred out.
                     return "Basic";
                 } else {
                     return null;
