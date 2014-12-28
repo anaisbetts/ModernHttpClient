@@ -113,12 +113,15 @@ namespace ModernHttpClient
                         throw new CaptiveNetworkException(new Uri(java_uri), new Uri(newUri.ToString()));
                     }
                 }
-            } catch (IOException ex) {
-                if (ex.Message.ToLowerInvariant().Contains("canceled")) {
+            } catch (Exception ex) {
+                // TODO: Don't catch everything, just catch relevant (figure out which are)
+                if (ex is IOException && ex.Message.ToLowerInvariant().Contains("canceled")) {
                     throw new OperationCanceledException();
                 }
 
-                throw;
+                throw new HttpRequestException(
+                    "Request failed",
+                    ex);
             }
 
             var respBody = resp.Body();
