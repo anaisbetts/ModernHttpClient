@@ -46,8 +46,11 @@ namespace ModernHttpClient
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification)
         {
+            var config = NSUrlSessionConfiguration.EphemeralSessionConfiguration;
+            config.TimeoutIntervalForRequest = 1000;
+            config.TimeoutIntervalForResource = 1000;
             session = NSUrlSession.FromConfiguration(
-                NSUrlSessionConfiguration.DefaultSessionConfiguration, 
+                config, 
                 new DataTaskDelegate(this), null);
 
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
