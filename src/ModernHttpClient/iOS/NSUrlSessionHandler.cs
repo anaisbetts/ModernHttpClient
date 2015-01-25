@@ -107,7 +107,10 @@ namespace ModernHttpClient
             cancellationToken.ThrowIfCancellationRequested();
 
             var ret = new TaskCompletionSource<HttpResponseMessage>();
-            cancellationToken.Register(() => ret.TrySetCanceled());
+            cancellationToken.Register(() => {
+                op.Cancel();
+                ret.TrySetCanceled();
+            });
 
             lock (inflightRequests) {
                 inflightRequests[op] = new InflightOperation() {
