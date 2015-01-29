@@ -108,6 +108,7 @@ namespace ModernHttpClient
                 resp = await call.EnqueueAsync().ConfigureAwait(false);
                 var newReq = resp.Request();
                 var newUri = newReq == null ? null : newReq.Uri();
+                request.RequestUri = new Uri(newUri.ToString());
                 if (throwOnCaptiveNetwork && newUri != null) {
                     if (url.Host != newUri.Host) {
                         throw new CaptiveNetworkException(new Uri(java_uri), new Uri(newUri.ToString()));

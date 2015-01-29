@@ -173,6 +173,7 @@ namespace ModernHttpClient
                         Content = content,
                         RequestMessage = data.Request,
                     };
+                    ret.RequestMessage.RequestUri = new Uri(resp.Url.AbsoluteString);
 
                     foreach(var v in resp.AllHeaderFields) {
                         // NB: Cocoa trolling us so hard by giving us back dummy
