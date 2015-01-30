@@ -408,8 +408,8 @@ namespace ModernHttpClient
     class ByteArrayListStream : Stream
     {
         Exception exception;
-        IDisposable lockRelease = EmptyDisposable.Instance;
-        readonly AsyncLock readStreamLock = new AsyncLock();
+        IDisposable lockRelease;
+        readonly AsyncLock readStreamLock;
         readonly List<byte[]> bytes = new List<byte[]>();
 
         bool isCompleted;
@@ -420,7 +420,7 @@ namespace ModernHttpClient
         public ByteArrayListStream()
         {
             // Initially we have nothing to read so Reads should be parked
-            readStreamLock.LockAsync().ContinueWith(t => lockRelease = t.Result);
+            readStreamLock = AsyncLock.CreateLocked(out lockRelease);
         }
 
         public override bool CanRead { get { return true; } }
