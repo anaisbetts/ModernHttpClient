@@ -9,6 +9,8 @@ namespace ModernHttpClient
 {
     public class NativeMessageHandler : HttpClientHandler
     {
+        const string wrongVersion = "You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version";
+
         /// <summary>
         /// Initializes a new instance of the <see
         /// cref="ModernHttpClient.Portable.NativeMessageHandler"/> class.
@@ -35,9 +37,9 @@ namespace ModernHttpClient
         {
         }
 
-        [Obsolete("You're using NativeMessageHandler on an unsupported platform or are ref'ing the wrong DLL. This method will do nothing!")]
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
         {
+            throw new Exception(wrongVersion);
         }
     }
 
@@ -67,13 +69,11 @@ namespace ModernHttpClient
     {
         const string wrongVersion = "You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version";
 
-        [Obsolete("You're using NativeCookieHandler on an unsupported platform or are ref'ing the wrong DLL. This method will do nothing!")]
         public void SetCookies(Cookie[] cookies)
         {
             throw new Exception(wrongVersion);
         }
 
-        [Obsolete("You're using NativeCookieHandler on an unsupported platform or are ref'ing the wrong DLL. This method will do nothing!")]
         public Cookie[] GetCookies()
         {
             throw new Exception(wrongVersion);
