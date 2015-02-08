@@ -3,6 +3,7 @@ using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
 using System.IO;
+using System.Net;
 
 namespace ModernHttpClient
 {
@@ -28,7 +29,9 @@ namespace ModernHttpClient
         /// verification via ServicePointManager. Disabled by default for 
         /// performance reasons (i.e. the OS default certificate verification 
         /// will take place)</param>
-        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification) : base()
+        /// <param name="cookieHandler">Enable native cookie handling.
+        /// </param>
+        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null) : base()
         {
         }
 
@@ -59,4 +62,21 @@ namespace ModernHttpClient
     }
 
     public delegate void ProgressDelegate(long bytes, long totalBytes, long totalBytesExpected);
+
+    public class NativeCookieHandler
+    {
+        const string wrongVersion = "You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version";
+
+        [Obsolete("You're using NativeCookieHandler on an unsupported platform or are ref'ing the wrong DLL. This method will do nothing!")]
+        public void SetCookies(Cookie[] cookies)
+        {
+            throw new Exception(wrongVersion);
+        }
+
+        [Obsolete("You're using NativeCookieHandler on an unsupported platform or are ref'ing the wrong DLL. This method will do nothing!")]
+        public Cookie[] GetCookies()
+        {
+            throw new Exception(wrongVersion);
+        }
+    }
 }

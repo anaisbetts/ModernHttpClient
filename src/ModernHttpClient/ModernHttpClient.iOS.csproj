@@ -59,6 +59,7 @@
     <Compile Include="CaptiveNetworkException.cs" />
     <Compile Include="ProgressStreamContent.cs" />
     <Compile Include="Utility.cs" />
+    <Compile Include="iOS\NativeCookieHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
