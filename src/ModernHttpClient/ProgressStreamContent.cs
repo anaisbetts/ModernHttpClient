@@ -94,6 +94,7 @@ namespace ModernHttpClient
             public ProgressStream(Stream stream, CancellationToken token)
             {
                 ParentStream = stream;
+                this.token = token;
 
                 ReadCallback = delegate { };
                 WriteCallback = delegate { };
