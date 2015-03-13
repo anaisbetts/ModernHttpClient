@@ -13,10 +13,24 @@ This is made possible by two native libraries:
 
 The good news is, you don't have to know either of these two libraries above,
 using ModernHttpClient is the most boring thing in the world. Here's how
-it works:
+it works.
+
+In your project references add ``System.Net.Http``.
 
 ```cs
-var httpClient = new HttpClient(new NativeMessageHandler());
+using ModernHttpClient;
+using System.Net.Http;
+
+// NativeMessageHandler is the only class from ModernHttpClient that you need!
+var httpClient = new HttpClient (new NativeMessageHandler ());
+
+var response = httpClient.GetAsync ("http://httpbin.org/status/418").Result;
+
+var responseContent = response.Content;
+
+string responseString = responseContent.ReadAsStringAsync ().Result;
+
+Console.WriteLine (responseString);
 ```
 
 ## How can I use this in a PCL?
