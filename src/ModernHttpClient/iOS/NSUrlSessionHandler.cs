@@ -27,6 +27,7 @@ namespace ModernHttpClient
         public ByteArrayListStream ResponseBody { get; set; }
         public CancellationToken CancellationToken { get; set; }
         public bool IsCompleted { get; set; }
+        public NetworkCredential PresentedCredential { get; set; }
     }
 
     public class NativeMessageHandler : HttpClientHandler
@@ -50,8 +51,11 @@ namespace ModernHttpClient
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
         {
+            var config = NSUrlSessionConfiguration.EphemeralSessionConfiguration;
+            config.TimeoutIntervalForRequest = 1000;
+            config.TimeoutIntervalForResource = 1000;
             session = NSUrlSession.FromConfiguration(
-                NSUrlSessionConfiguration.DefaultSessionConfiguration, 
+                config, 
                 new DataTaskDelegate(this), null);
 
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
@@ -115,7 +119,10 @@ namespace ModernHttpClient
             cancellationToken.ThrowIfCancellationRequested();
 
             var ret = new TaskCompletionSource<HttpResponseMessage>();
-            cancellationToken.Register(() => ret.TrySetCanceled());
+            cancellationToken.Register(() => {
+                op.Cancel();
+                ret.TrySetCanceled();
+            });
 
             lock (inflightRequests) {
                 inflightRequests[op] = new InflightOperation() {
@@ -138,6 +145,15 @@ namespace ModernHttpClient
             public DataTaskDelegate(NativeMessageHandler that)
             {
                 this.This = that;
+            }
+
+            public override void WillPerformHttpRedirection(NSUrlSession session, NSUrlSessionTask task, NSHttpUrlResponse response, NSUrlRequest newRequest, Action<NSUrlRequest> completionHandler)
+            {
+                if (this.This.AllowAutoRedirect) {
+                    completionHandler(newRequest);
+                } else {
+                    completionHandler(null);
+                }
             }
 
             public override void DidReceiveResponse(NSUrlSession session, NSUrlSessionDataTask dataTask, NSUrlResponse response, Action<NSUrlSessionResponseDisposition> completionHandler)
@@ -183,8 +199,9 @@ namespace ModernHttpClient
                         ret.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
                         ret.Content.Headers.TryAddWithoutValidation(v.Key.ToString(), v.Value.ToString());
                     }
-
-                    data.FutureResponse.TrySetResult(ret);
+                    // NB: The awaiting code can synchronously call read, which will block, and we'll
+                    // never get a didReceiveData, because we have not returned from DidReceiveResponse.
+                    Task.Run (() => { data.FutureResponse.TrySetResult(ret); });
                 } catch (Exception ex) {
                     data.FutureResponse.TrySetException(ex);
                 }
@@ -294,7 +311,11 @@ namespace ModernHttpClient
                 }
 
             sslErrorVerify:
-                bool result = ServicePointManager.ServerCertificateValidationCallback(this, root, chain, errors);
+                // NachoCove: Add this to make it look like other HTTP client
+                var url = task.CurrentRequest.Url.ToString ();
+                var request = new HttpWebRequest (new Uri (url));
+                // End of NachoCove
+                bool result = ServicePointManager.ServerCertificateValidationCallback(request, root, chain, errors);
                 if (result) {
                     completionHandler(
                         NSUrlSessionAuthChallengeDisposition.UseCredential,
@@ -305,8 +326,56 @@ namespace ModernHttpClient
                 return;
 
             doDefault:
+                if (null != This.Credentials) {
+                    var authenticationType = AuthenticationTypeFromAuthenticationMethod(challenge.ProtectionSpace.AuthenticationMethod);
+                    var uri = UriFromNSUrlProtectionSpace(challenge.ProtectionSpace);
+                    if (null != authenticationType && null != uri) {
+                        var specifedCredential = This.Credentials.GetCredential(uri, authenticationType);
+                        var state = getResponseForTask (task);
+                        if (null != specifedCredential &&
+                            null != specifedCredential.UserName && null != specifedCredential.Password) {
+                            if (specifedCredential == state.PresentedCredential) {
+                                completionHandler (NSUrlSessionAuthChallengeDisposition.UseCredential, null);
+                            } else {
+                                state.PresentedCredential = specifedCredential;
+                                var credential = new NSUrlCredential (
+                                                 specifedCredential.UserName,
+                                                 specifedCredential.Password,
+                                                 NSUrlCredentialPersistence.ForSession);
+                                completionHandler (NSUrlSessionAuthChallengeDisposition.UseCredential, credential);
+                            }
+                            return;
+                        }
+                    }
+                }
                 completionHandler(NSUrlSessionAuthChallengeDisposition.PerformDefaultHandling, challenge.ProposedCredential);
                 return;
+            }
+
+            Uri UriFromNSUrlProtectionSpace (NSUrlProtectionSpace pSpace)
+            {
+                var builder = new UriBuilder(pSpace.Protocol, pSpace.Host);
+                builder.Port = (int)pSpace.Port;
+                Uri retval;
+                try {
+                    retval = builder.Uri;
+                } catch (UriFormatException) {
+                    retval = null;
+                }
+                return retval;
+            }
+
+            string AuthenticationTypeFromAuthenticationMethod (string method)
+            {
+                if (NSUrlProtectionSpace.AuthenticationMethodDefault == method ||
+                    NSUrlProtectionSpace.AuthenticationMethodHTTPBasic == method ||
+                    NSUrlProtectionSpace.AuthenticationMethodNTLM == method ||
+                    NSUrlProtectionSpace.AuthenticationMethodHTTPDigest == method) {
+                    // Use Basic as a way to get the user+pass cred out.
+                    return "Basic";
+                } else {
+                    return null;
+                }
             }
 
             Exception createExceptionForNSError(NSError error)
