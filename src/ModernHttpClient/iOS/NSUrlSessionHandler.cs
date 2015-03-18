@@ -298,7 +298,11 @@ namespace ModernHttpClient
                 }
 
             sslErrorVerify:
-                bool result = ServicePointManager.ServerCertificateValidationCallback(this, root, chain, errors);
+                // NachoCove: Add this to make it look like other HTTP client
+                var url = task.CurrentRequest.Url.ToString ();
+                var request = new HttpWebRequest (new Uri (url));
+                // End of NachoCove
+                bool result = ServicePointManager.ServerCertificateValidationCallback(request, root, chain, errors);
                 if (result) {
                     completionHandler(
                         NSUrlSessionAuthChallengeDisposition.UseCredential,
