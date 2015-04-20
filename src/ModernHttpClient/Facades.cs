@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Net.Http;
 using System.Threading.Tasks;
 using System.Threading;
@@ -74,9 +75,12 @@ namespace ModernHttpClient
             throw new Exception(wrongVersion);
         }
 
-        public Cookie[] GetCookies()
+        public ICollection<Cookie> Cookies
         {
-            throw new Exception(wrongVersion);
+            get
+            {
+                throw new Exception(wrongVersion);
+            }
         }
     }
 }
