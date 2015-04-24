@@ -309,6 +309,12 @@ namespace ModernHttpClient
                 return;
             }
 
+            public override void WillPerformHttpRedirection(NSUrlSession session, NSUrlSessionTask task, NSHttpUrlResponse response, NSUrlRequest newRequest, Action<NSUrlRequest> completionHandler)
+            {
+                NSUrlRequest nextRequest = (This.AllowAutoRedirect ? newRequest : null);
+                completionHandler(nextRequest);
+            }
+
             Exception createExceptionForNSError(NSError error)
             {
                 var ret = default(Exception);
