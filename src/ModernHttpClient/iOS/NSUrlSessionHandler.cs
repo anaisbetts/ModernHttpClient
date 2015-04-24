@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Cache;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
@@ -47,6 +48,8 @@ namespace ModernHttpClient
         readonly bool throwOnCaptiveNetwork;
         readonly bool customSSLVerification;
 
+        public RequestCacheLevel CachePolicyLevel { get; set; }
+
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
         {
@@ -56,6 +59,8 @@ namespace ModernHttpClient
 
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
+
+            this.CachePolicyLevel = RequestCacheLevel.Default;
         }
 
         private string GetHeaderSeparator(string name)
@@ -88,6 +93,36 @@ namespace ModernHttpClient
             }
         }
 
+        private static NSUrlRequestCachePolicy NativeRequestCachePolicyFromCachePolicyLevel(RequestCacheLevel cachePolicyLevel)
+        {
+            switch (cachePolicyLevel) {
+            case RequestCacheLevel.BypassCache:
+                return NSUrlRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData;
+
+            case RequestCacheLevel.CacheIfAvailable:
+                return NSUrlRequestCachePolicy.ReturnCacheDataElseLoad;
+
+            case RequestCacheLevel.CacheOnly:
+                return NSUrlRequestCachePolicy.ReturnCacheDataDoNotLoad;
+
+            case RequestCacheLevel.NoCacheNoStore:
+                // The NoCacheNoStore value is also intended to instruct the cache to remove the entry
+                // from the cache if it exists and to not cache the result of the load, but iOS does
+                // not have a corresponding cache policy value for this behavior.
+                return NSUrlRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData;
+
+            case RequestCacheLevel.Reload:
+                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
+
+            case RequestCacheLevel.Revalidate:
+                return NSUrlRequestCachePolicy.ReloadRevalidatingCacheData;
+
+            case RequestCacheLevel.Default:
+            default:
+                return NSUrlRequestCachePolicy.UseProtocolCachePolicy;
+            }
+        }
+
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var headers = request.Headers as IEnumerable<KeyValuePair<string, IEnumerable<string>>>;
@@ -101,7 +136,7 @@ namespace ModernHttpClient
             var rq = new NSMutableUrlRequest() {
                 AllowsCellularAccess = true,
                 Body = NSData.FromArray(ms.ToArray()),
-                CachePolicy = NSUrlRequestCachePolicy.UseProtocolCachePolicy,
+                CachePolicy = NativeRequestCachePolicyFromCachePolicyLevel(this.CachePolicyLevel),
                 Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
                     acc.Add(new NSString(x.Key), new NSString(String.Join(GetHeaderSeparator(x.Key), x.Value)));
                     return acc;
