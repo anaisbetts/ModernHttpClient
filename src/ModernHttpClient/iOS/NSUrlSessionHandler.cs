@@ -48,7 +48,7 @@ namespace ModernHttpClient
         readonly bool throwOnCaptiveNetwork;
         readonly bool customSSLVerification;
 
-        public HttpRequestCacheLevel CachePolicyLevel { get; set; }
+        public bool EnableCaching { get; set; }
 
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
@@ -60,7 +60,7 @@ namespace ModernHttpClient
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
 
-            this.CachePolicyLevel = HttpRequestCacheLevel.Default;
+            this.EnableCaching = true;
         }
 
         private string GetHeaderSeparator(string name)
@@ -93,48 +93,6 @@ namespace ModernHttpClient
             }
         }
 
-        private static NSUrlRequestCachePolicy NativeRequestCachePolicyFromCachePolicyLevel(HttpRequestCacheLevel cachePolicyLevel)
-        {
-            switch (cachePolicyLevel) {
-            case HttpRequestCacheLevel.BypassCache:
-                // Apple defines the ReloadIgnoringLocalAndRemoteCacheData value which sounds like
-                // what we want here, but it is listed as "unimplemented" in the header file.
-                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
-
-            case HttpRequestCacheLevel.CacheIfAvailable:
-                return NSUrlRequestCachePolicy.ReturnCacheDataElseLoad;
-
-            case HttpRequestCacheLevel.CacheOnly:
-            case HttpRequestCacheLevel.CacheOrNextCacheOnly:
-                // Apple doesn't provide an equivalent policy as CacheOrNextCacheOnly.
-                // Microsoft specifies that a WebException is thrown if the item is not in the local cache,
-                // but Apple does not include that detail.
-                return NSUrlRequestCachePolicy.ReturnCacheDataDoNotLoad;
-
-            case HttpRequestCacheLevel.NoCacheNoStore:
-                // The NoCacheNoStore value is also intended to instruct the cache to remove the entry
-                // from the cache if it exists and to not cache the result of the load, but Apple does
-                // not have a corresponding cache policy value for this behavior.
-                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
-
-            case HttpRequestCacheLevel.Refresh:
-                // Apple doesn't provide an equivalent policy.
-                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
-
-            case HttpRequestCacheLevel.Reload:
-                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
-
-            case HttpRequestCacheLevel.Revalidate:
-                // Apple defines the ReloadRevalidatingCacheData value which sounds like what we
-                // want here, but it is listed as "unimplemented" in the header file.
-                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
-
-            case HttpRequestCacheLevel.Default:
-            default:
-                return NSUrlRequestCachePolicy.UseProtocolCachePolicy;
-            }
-        }
-
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var headers = request.Headers as IEnumerable<KeyValuePair<string, IEnumerable<string>>>;
@@ -148,7 +106,7 @@ namespace ModernHttpClient
             var rq = new NSMutableUrlRequest() {
                 AllowsCellularAccess = true,
                 Body = NSData.FromArray(ms.ToArray()),
-                CachePolicy = NativeRequestCachePolicyFromCachePolicyLevel(this.CachePolicyLevel),
+                CachePolicy = (this.EnableCaching ? NSUrlRequestCachePolicy.UseProtocolCachePolicy : NSUrlRequestCachePolicy.ReloadIgnoringCacheData),
                 Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
                     acc.Add(new NSString(x.Key), new NSString(String.Join(GetHeaderSeparator(x.Key), x.Value)));
                     return acc;
