@@ -48,7 +48,7 @@ namespace ModernHttpClient
         readonly bool throwOnCaptiveNetwork;
         readonly bool customSSLVerification;
 
-        public RequestCacheLevel CachePolicyLevel { get; set; }
+        public HttpRequestCacheLevel CachePolicyLevel { get; set; }
 
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
@@ -60,7 +60,7 @@ namespace ModernHttpClient
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
 
-            this.CachePolicyLevel = RequestCacheLevel.Default;
+            this.CachePolicyLevel = HttpRequestCacheLevel.Default;
         }
 
         private string GetHeaderSeparator(string name)
@@ -93,31 +93,43 @@ namespace ModernHttpClient
             }
         }
 
-        private static NSUrlRequestCachePolicy NativeRequestCachePolicyFromCachePolicyLevel(RequestCacheLevel cachePolicyLevel)
+        private static NSUrlRequestCachePolicy NativeRequestCachePolicyFromCachePolicyLevel(HttpRequestCacheLevel cachePolicyLevel)
         {
             switch (cachePolicyLevel) {
-            case RequestCacheLevel.BypassCache:
-                return NSUrlRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData;
-
-            case RequestCacheLevel.CacheIfAvailable:
-                return NSUrlRequestCachePolicy.ReturnCacheDataElseLoad;
-
-            case RequestCacheLevel.CacheOnly:
-                return NSUrlRequestCachePolicy.ReturnCacheDataDoNotLoad;
-
-            case RequestCacheLevel.NoCacheNoStore:
-                // The NoCacheNoStore value is also intended to instruct the cache to remove the entry
-                // from the cache if it exists and to not cache the result of the load, but iOS does
-                // not have a corresponding cache policy value for this behavior.
-                return NSUrlRequestCachePolicy.ReloadIgnoringLocalAndRemoteCacheData;
-
-            case RequestCacheLevel.Reload:
+            case HttpRequestCacheLevel.BypassCache:
+                // Apple defines the ReloadIgnoringLocalAndRemoteCacheData value which sounds like
+                // what we want here, but it is listed as "unimplemented" in the header file.
                 return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
 
-            case RequestCacheLevel.Revalidate:
-                return NSUrlRequestCachePolicy.ReloadRevalidatingCacheData;
+            case HttpRequestCacheLevel.CacheIfAvailable:
+                return NSUrlRequestCachePolicy.ReturnCacheDataElseLoad;
 
-            case RequestCacheLevel.Default:
+            case HttpRequestCacheLevel.CacheOnly:
+            case HttpRequestCacheLevel.CacheOrNextCacheOnly:
+                // Apple doesn't provide an equivalent policy as CacheOrNextCacheOnly.
+                // Microsoft specifies that a WebException is thrown if the item is not in the local cache,
+                // but Apple does not include that detail.
+                return NSUrlRequestCachePolicy.ReturnCacheDataDoNotLoad;
+
+            case HttpRequestCacheLevel.NoCacheNoStore:
+                // The NoCacheNoStore value is also intended to instruct the cache to remove the entry
+                // from the cache if it exists and to not cache the result of the load, but Apple does
+                // not have a corresponding cache policy value for this behavior.
+                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
+
+            case HttpRequestCacheLevel.Refresh:
+                // Apple doesn't provide an equivalent policy.
+                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
+
+            case HttpRequestCacheLevel.Reload:
+                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
+
+            case HttpRequestCacheLevel.Revalidate:
+                // Apple defines the ReloadRevalidatingCacheData value which sounds like what we
+                // want here, but it is listed as "unimplemented" in the header file.
+                return NSUrlRequestCachePolicy.ReloadIgnoringLocalCacheData;
+
+            case HttpRequestCacheLevel.Default:
             default:
                 return NSUrlRequestCachePolicy.UseProtocolCachePolicy;
             }
