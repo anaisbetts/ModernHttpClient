@@ -18,6 +18,7 @@ namespace ModernHttpClient
     public class NativeMessageHandler : HttpClientHandler
     {
         readonly OkHttpClient client = new OkHttpClient();
+        readonly CacheControl noCacheCacheControl = default(CacheControl);
         readonly bool throwOnCaptiveNetwork;
 
         readonly Dictionary<HttpRequestMessage, WeakReference> registeredProgressCallbacks =
@@ -36,6 +37,7 @@ namespace ModernHttpClient
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
 
             if (customSSLVerification) client.SetHostnameVerifier(new HostnameVerifier());
+            noCacheCacheControl = (new CacheControl.Builder()).NoCache().Build();
         }
 
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
@@ -91,6 +93,10 @@ namespace ModernHttpClient
             var builder = new Request.Builder()
                 .Method(request.Method.Method.ToUpperInvariant(), body)
                 .Url(url);
+
+            if (DisableCaching) {
+                builder.CacheControl(noCacheCacheControl);
+            }
 
             var keyValuePairs = request.Headers
                 .Union(request.Content != null ?
