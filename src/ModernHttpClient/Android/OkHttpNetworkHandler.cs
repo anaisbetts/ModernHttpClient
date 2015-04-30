@@ -86,7 +86,7 @@ namespace ModernHttpClient
             if (request.Content != null) {
                 var bytes = await request.Content.ReadAsByteArrayAsync().ConfigureAwait(false);
 
-                var contentType = string.Empty;
+                var contentType = "text/plain";
                 if (request.Content.Headers.ContentType != null) {
                     contentType = String.Join(" ", request.Content.Headers.GetValues("Content-Type"));
                 }
