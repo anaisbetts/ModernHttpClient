@@ -14,16 +14,18 @@ namespace ModernHttpClient
             CookieHandler.Default = cookieManager; //set cookie manager if using NativeCookieHandler
         }
 
-        public void SetCookies(Cookie[] cookies)
+        public void SetCookies(IEnumerable<Cookie> cookies)
         {
-            cookies.Select(ToNativeCookie).ToList().ForEach(nc => cookieManager.CookieStore.Add(new URI(nc.Domain),nc));
+            foreach (var nc in cookies.Select(ToNativeCookie)) {
+                cookieManager.CookieStore.Add(new URI(nc.Domain), nc);
+            }
         }
             
-        public ICollection<Cookie> Cookies
-        {
-            get 
-            {
-                return cookieManager.CookieStore.Cookies.Select(ToNetCookie).ToList();
+        public List<Cookie> Cookies {
+            get {
+                return cookieManager.CookieStore.Cookies
+                    .Select(ToNetCookie)
+                    .ToList();
             }
         }
 
@@ -33,6 +35,7 @@ namespace ModernHttpClient
             nc.Domain = cookie.Domain;
             nc.Path = cookie.Path;
             nc.Secure = cookie.Secure;
+
             return nc;
         }
 
@@ -40,6 +43,7 @@ namespace ModernHttpClient
         {
             var nc = new Cookie(cookie.Name, cookie.Value, cookie.Path, cookie.Domain);
             nc.Secure = cookie.Secure;
+
             return nc;
         }
     }

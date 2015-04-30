@@ -12,16 +12,18 @@ namespace ModernHttpClient
 {
     public class NativeCookieHandler
     {
-        public void SetCookies(Cookie[] cookies)
+        public void SetCookies(IEnumerable<Cookie> cookies)
         {
-            cookies.Select(ToNativeCookie).ToList().ForEach(NSHttpCookieStorage.SharedStorage.SetCookie);
+            foreach (var v in cookies.Select(ToNativeCookie)) {
+                NSHttpCookieStorage.SharedStorage.SetCookie(v);
+            }
         }
 
-        public ICollection<Cookie> Cookies
-        {
-            get 
-            {
-                return NSHttpCookieStorage.SharedStorage.Cookies.Select(ToNetCookie).ToList();
+        public List<Cookie> Cookies {
+            get {
+                return NSHttpCookieStorage.SharedStorage.Cookies
+                    .Select(ToNetCookie)
+                    .ToList();
             }
         }
 
@@ -34,6 +36,7 @@ namespace ModernHttpClient
         {
             var nc = new Cookie(cookie.Name, cookie.Value, cookie.Path, cookie.Domain);
             nc.Secure = cookie.IsSecure;
+
             return nc;
         }
     }

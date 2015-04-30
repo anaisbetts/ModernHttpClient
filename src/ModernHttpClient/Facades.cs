@@ -72,12 +72,12 @@ namespace ModernHttpClient
     {
         const string wrongVersion = "You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version";
 
-        public void SetCookies(Cookie[] cookies)
+        public void SetCookies(IEnumerable<Cookie> cookies)
         {
             throw new Exception(wrongVersion);
         }
 
-        public ICollection<Cookie> Cookies {
+        public List<Cookie> Cookies {
             get { throw new Exception(wrongVersion); }
         }
     }
