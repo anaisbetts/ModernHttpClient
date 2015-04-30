@@ -66,10 +66,12 @@ namespace ModernHttpClient
             }
         }
 
-        private string GetHeaderSeparator(string name)
+        string getHeaderSeparator(string name)
         {
-            if (headerSeparators.ContainsKey(name))
+            if (headerSeparators.ContainsKey(name)) {
                 return headerSeparators[name];
+            }
+
             return ",";
         }
 
@@ -95,7 +97,7 @@ namespace ModernHttpClient
                     (IEnumerable<KeyValuePair<string, IEnumerable<string>>>)request.Content.Headers :
                     Enumerable.Empty<KeyValuePair<string, IEnumerable<string>>>());
 
-            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, String.Join(GetHeaderSeparator(kvp.Key), kvp.Value));
+            foreach (var kvp in keyValuePairs) builder.AddHeader(kvp.Key, String.Join(getHeaderSeparator(kvp.Key), kvp.Value));
 
             cancellationToken.ThrowIfCancellationRequested();
 

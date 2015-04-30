@@ -77,12 +77,8 @@ namespace ModernHttpClient
             throw new Exception(wrongVersion);
         }
 
-        public ICollection<Cookie> Cookies
-        {
-            get
-            {
-                throw new Exception(wrongVersion);
-            }
+        public ICollection<Cookie> Cookies {
+            get { throw new Exception(wrongVersion); }
         }
     }
 }

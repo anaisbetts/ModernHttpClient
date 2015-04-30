@@ -63,10 +63,12 @@ namespace ModernHttpClient
             this.DisableCaching = false;
         }
 
-        private string GetHeaderSeparator(string name)
+        string getHeaderSeparator(string name)
         {
-            if (headerSeparators.ContainsKey(name))
+            if (headerSeparators.ContainsKey(name)) {
                 return headerSeparators[name];
+            }
+
             return ",";
         }
 
@@ -108,7 +110,7 @@ namespace ModernHttpClient
                 Body = NSData.FromArray(ms.ToArray()),
                 CachePolicy = (!this.DisableCaching ? NSUrlRequestCachePolicy.UseProtocolCachePolicy : NSUrlRequestCachePolicy.ReloadIgnoringCacheData),
                 Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
-                    acc.Add(new NSString(x.Key), new NSString(String.Join(GetHeaderSeparator(x.Key), x.Value)));
+                    acc.Add(new NSString(x.Key), new NSString(String.Join(getHeaderSeparator(x.Key), x.Value)));
                     return acc;
                 }),
                 HttpMethod = request.Method.ToString().ToUpperInvariant(),
