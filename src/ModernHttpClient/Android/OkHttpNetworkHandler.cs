@@ -27,6 +27,8 @@ namespace ModernHttpClient
                 {"User-Agent", " "}
             };
 
+        public bool DisableCaching { get; set; }
+
         public NativeMessageHandler() : this(false, false) {}
 
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)

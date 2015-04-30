@@ -6,6 +6,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.Cache;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
@@ -47,6 +48,8 @@ namespace ModernHttpClient
         readonly bool throwOnCaptiveNetwork;
         readonly bool customSSLVerification;
 
+        public bool DisableCaching { get; set; }
+
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
         {
@@ -56,6 +59,8 @@ namespace ModernHttpClient
 
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
+
+            this.DisableCaching = false;
         }
 
         private string GetHeaderSeparator(string name)
@@ -101,7 +106,7 @@ namespace ModernHttpClient
             var rq = new NSMutableUrlRequest() {
                 AllowsCellularAccess = true,
                 Body = NSData.FromArray(ms.ToArray()),
-                CachePolicy = NSUrlRequestCachePolicy.UseProtocolCachePolicy,
+                CachePolicy = (!this.DisableCaching ? NSUrlRequestCachePolicy.UseProtocolCachePolicy : NSUrlRequestCachePolicy.ReloadIgnoringCacheData),
                 Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
                     acc.Add(new NSString(x.Key), new NSString(String.Join(GetHeaderSeparator(x.Key), x.Value)));
                     return acc;

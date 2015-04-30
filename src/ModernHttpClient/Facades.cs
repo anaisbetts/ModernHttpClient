@@ -12,6 +12,8 @@ namespace ModernHttpClient
     {
         const string wrongVersion = "You're referencing the Portable version in your App - you need to reference the platform (iOS/Android) version";
 
+        public bool DisableCaching { get; set; }
+
         /// <summary>
         /// Initializes a new instance of the <see
         /// cref="ModernHttpClient.Portable.NativeMessageHandler"/> class.
