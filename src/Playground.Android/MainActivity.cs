@@ -98,8 +98,8 @@ namespace Playground.Android
                 st.Start();
                 try {
                     //var url = "https://tv.eurosport.com";
-                    var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
-                    //var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
+                    //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
+                    var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
 
                     var request = new HttpRequestMessage(HttpMethod.Get, url);
                     handler.RegisterForProgress(request, HandleDownloadProgress);
