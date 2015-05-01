@@ -6,10 +6,11 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Net.Cache;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+using ModernHttpClient.CoreFoundation;
+using ModernHttpClient.Foundation;
 
 #if UNIFIED
 using Foundation;
@@ -322,98 +323,216 @@ namespace ModernHttpClient
                 completionHandler(nextRequest);
             }
 
-            Exception createExceptionForNSError(NSError error)
+            static Exception createExceptionForNSError(NSError error)
             {
                 var ret = default(Exception);
-                var urlError = default(NSUrlError);
                 var webExceptionStatus = WebExceptionStatus.UnknownError;
 
-                // If the domain is something other than NSUrlErrorDomain, 
-                // just grab the default info
-                if (error.Domain != NSError.NSUrlErrorDomain) goto leave;
+                var innerException = new NSErrorException(error);
 
-                // Convert the error code into an enumeration (this is future
-                // proof, rather than just casting integer)
-                if (!Enum.TryParse<NSUrlError>(error.Code.ToString(), out urlError)) urlError = NSUrlError.Unknown;
+                if (error.Domain == NSError.NSUrlErrorDomain) {
+                    // Convert the error code into an enumeration (this is future
+                    // proof, rather than just casting integer)
+                    NSUrlErrorExtended urlError;
+                    if (!Enum.TryParse<NSUrlErrorExtended>(error.Code.ToString(), out urlError)) urlError = NSUrlErrorExtended.Unknown;
 
-                // Parse the enum into a web exception status or exception. some
-                // of these values don't necessarily translate completely to
-                // what WebExceptionStatus supports, so made some best guesses
-                // here.  for your reading pleasure, compare these:
-                //
-                // Apple docs: https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Constants/Reference/reference.html
-                // .NET docs: http://msdn.microsoft.com/en-us/library/system.net.webexceptionstatus(v=vs.110).aspx
-                switch(urlError) {
-                case NSUrlError.Cancelled:
-                case NSUrlError.UserCancelledAuthentication:
-                    ret = new OperationCanceledException();
-                    break;
-                case NSUrlError.BadURL:
-                case NSUrlError.UnsupportedURL:
-                case NSUrlError.CannotConnectToHost:
-                case NSUrlError.ResourceUnavailable:
-                case NSUrlError.NotConnectedToInternet:
-                case NSUrlError.UserAuthenticationRequired:
-                    webExceptionStatus = WebExceptionStatus.ConnectFailure;
-                    break;
-                case NSUrlError.TimedOut:
-                    webExceptionStatus = WebExceptionStatus.Timeout;
-                    break;
-                case NSUrlError.CannotFindHost:
-                case NSUrlError.DNSLookupFailed:
-                    webExceptionStatus = WebExceptionStatus.NameResolutionFailure;
-                    break;
-                case NSUrlError.DataLengthExceedsMaximum:
-                    webExceptionStatus = WebExceptionStatus.MessageLengthLimitExceeded;
-                    break;
-                case NSUrlError.NetworkConnectionLost:
-                    webExceptionStatus = WebExceptionStatus.ConnectionClosed;
-                    break;
-                case NSUrlError.HTTPTooManyRedirects:
-                case NSUrlError.RedirectToNonExistentLocation:
-                    webExceptionStatus = WebExceptionStatus.ProtocolError;
-                    break;
-                case NSUrlError.BadServerResponse:
-                case NSUrlError.ZeroByteResource:
-                case NSUrlError.CannotDecodeContentData:
-                case NSUrlError.CannotDecodeRawData:
-                case NSUrlError.CannotParseResponse:
-                case NSUrlError.FileDoesNotExist:
-                case NSUrlError.FileIsDirectory:
-                case NSUrlError.NoPermissionsToReadFile:
-                case NSUrlError.CannotLoadFromNetwork:
-                case NSUrlError.CannotCreateFile:
-                case NSUrlError.CannotOpenFile:
-                case NSUrlError.CannotCloseFile:
-                case NSUrlError.CannotWriteToFile:
-                case NSUrlError.CannotRemoveFile:
-                case NSUrlError.CannotMoveFile:
-                case NSUrlError.DownloadDecodingFailedMidStream:
-                case NSUrlError.DownloadDecodingFailedToComplete:
-                    webExceptionStatus = WebExceptionStatus.ReceiveFailure;
-                    break;
-                case NSUrlError.SecureConnectionFailed:
-                    webExceptionStatus = WebExceptionStatus.SecureChannelFailure;
-                    break;
-                case NSUrlError.ServerCertificateHasBadDate:
-                case NSUrlError.ServerCertificateHasUnknownRoot:
-                case NSUrlError.ServerCertificateNotYetValid:
-                case NSUrlError.ServerCertificateUntrusted:
-                case NSUrlError.ClientCertificateRejected:
-                    webExceptionStatus = WebExceptionStatus.TrustFailure;
-                    break;
+                    // Parse the enum into a web exception status or exception. Some
+                    // of these values don't necessarily translate completely to
+                    // what WebExceptionStatus supports, so made some best guesses
+                    // here.  For your reading pleasure, compare these:
+                    //
+                    // Apple docs: https://developer.apple.com/library/mac/documentation/Cocoa/Reference/Foundation/Miscellaneous/Foundation_Constants/index.html#//apple_ref/doc/constant_group/URL_Loading_System_Error_Codes
+                    // .NET docs: http://msdn.microsoft.com/en-us/library/system.net.webexceptionstatus(v=vs.110).aspx
+                    switch (urlError) {
+                        case NSUrlErrorExtended.Cancelled:
+                        case NSUrlErrorExtended.UserCancelledAuthentication:
+                            // No more processing is required so just return.
+                            ret = new OperationCanceledException(error.LocalizedDescription, innerException);
+                            return ret;
+                        case NSUrlErrorExtended.BadURL:
+                        case NSUrlErrorExtended.UnsupportedURL:
+                        case NSUrlErrorExtended.CannotConnectToHost:
+                        case NSUrlErrorExtended.ResourceUnavailable:
+                        case NSUrlErrorExtended.NotConnectedToInternet:
+                        case NSUrlErrorExtended.UserAuthenticationRequired:
+                        case NSUrlErrorExtended.InternationalRoamingOff:
+                        case NSUrlErrorExtended.CallIsActive:
+                        case NSUrlErrorExtended.DataNotAllowed:
+                            webExceptionStatus = WebExceptionStatus.ConnectFailure;
+                            break;
+                        case NSUrlErrorExtended.TimedOut:
+                            webExceptionStatus = WebExceptionStatus.Timeout;
+                            break;
+                        case NSUrlErrorExtended.CannotFindHost:
+                        case NSUrlErrorExtended.DNSLookupFailed:
+                            webExceptionStatus = WebExceptionStatus.NameResolutionFailure;
+                            break;
+                        case NSUrlErrorExtended.DataLengthExceedsMaximum:
+                            webExceptionStatus = WebExceptionStatus.MessageLengthLimitExceeded;
+                            break;
+                        case NSUrlErrorExtended.NetworkConnectionLost:
+                            webExceptionStatus = WebExceptionStatus.ConnectionClosed;
+                            break;
+                        case NSUrlErrorExtended.HTTPTooManyRedirects:
+                        case NSUrlErrorExtended.RedirectToNonExistentLocation:
+                            webExceptionStatus = WebExceptionStatus.ProtocolError;
+                            break;
+                        case NSUrlErrorExtended.RequestBodyStreamExhausted:
+                            webExceptionStatus = WebExceptionStatus.SendFailure;
+                            break;
+                        case NSUrlErrorExtended.BadServerResponse:
+                        case NSUrlErrorExtended.ZeroByteResource:
+                        case NSUrlErrorExtended.CannotDecodeRawData:
+                        case NSUrlErrorExtended.CannotDecodeContentData:
+                        case NSUrlErrorExtended.CannotParseResponse:
+                        case NSUrlErrorExtended.FileDoesNotExist:
+                        case NSUrlErrorExtended.FileIsDirectory:
+                        case NSUrlErrorExtended.NoPermissionsToReadFile:
+                        case NSUrlErrorExtended.CannotLoadFromNetwork:
+                        case NSUrlErrorExtended.CannotCreateFile:
+                        case NSUrlErrorExtended.CannotOpenFile:
+                        case NSUrlErrorExtended.CannotCloseFile:
+                        case NSUrlErrorExtended.CannotWriteToFile:
+                        case NSUrlErrorExtended.CannotRemoveFile:
+                        case NSUrlErrorExtended.CannotMoveFile:
+                        case NSUrlErrorExtended.DownloadDecodingFailedMidStream:
+                        case NSUrlErrorExtended.DownloadDecodingFailedToComplete:
+                            webExceptionStatus = WebExceptionStatus.ReceiveFailure;
+                            break;
+                        case NSUrlErrorExtended.SecureConnectionFailed:
+                            webExceptionStatus = WebExceptionStatus.SecureChannelFailure;
+                            break;
+                        case NSUrlErrorExtended.ServerCertificateHasBadDate:
+                        case NSUrlErrorExtended.ServerCertificateHasUnknownRoot:
+                        case NSUrlErrorExtended.ServerCertificateNotYetValid:
+                        case NSUrlErrorExtended.ServerCertificateUntrusted:
+                        case NSUrlErrorExtended.ClientCertificateRejected:
+                        case NSUrlErrorExtended.ClientCertificateRequired:
+                            webExceptionStatus = WebExceptionStatus.TrustFailure;
+                            break;
+                    }
+                } else if (error.Domain == CFNetworkError.ErrorDomain) {
+                    // Convert the error code into an enumeration (this is future
+                    // proof, rather than just casting integer)
+                    CFNetworkErrors networkError;
+                    if (!Enum.TryParse<CFNetworkErrors>(error.Code.ToString(), out networkError)) networkError = CFNetworkErrors.CFHostErrorUnknown;
+
+                    // Parse the enum into a web exception status or exception. Some
+                    // of these values don't necessarily translate completely to
+                    // what WebExceptionStatus supports, so made some best guesses
+                    // here.  For your reading pleasure, compare these:
+                    //
+                    // Apple docs: https://developer.apple.com/library/ios/documentation/Networking/Reference/CFNetworkErrors/#//apple_ref/c/tdef/CFNetworkErrors
+                    // .NET docs: http://msdn.microsoft.com/en-us/library/system.net.webexceptionstatus(v=vs.110).aspx
+                    switch (networkError) {
+                        case CFNetworkErrors.CFURLErrorCancelled:
+                        case CFNetworkErrors.CFURLErrorUserCancelledAuthentication:
+                        case CFNetworkErrors.CFNetServiceErrorCancel:
+                            // No more processing is required so just return.
+                            ret = new OperationCanceledException(error.LocalizedDescription, innerException);
+                            return ret;
+                        case CFNetworkErrors.CFSOCKS5ErrorBadCredentials:
+                        case CFNetworkErrors.CFSOCKS5ErrorUnsupportedNegotiationMethod:
+                        case CFNetworkErrors.CFSOCKS5ErrorNoAcceptableMethod:
+                        case CFNetworkErrors.CFErrorHttpAuthenticationTypeUnsupported:
+                        case CFNetworkErrors.CFErrorHttpBadCredentials:
+                        case CFNetworkErrors.CFErrorHttpBadURL:
+                        case CFNetworkErrors.CFURLErrorBadURL:
+                        case CFNetworkErrors.CFURLErrorUnsupportedURL:
+                        case CFNetworkErrors.CFURLErrorCannotConnectToHost:
+                        case CFNetworkErrors.CFURLErrorResourceUnavailable:
+                        case CFNetworkErrors.CFURLErrorNotConnectedToInternet:
+                        case CFNetworkErrors.CFURLErrorUserAuthenticationRequired:
+                        case CFNetworkErrors.CFURLErrorInternationalRoamingOff:
+                        case CFNetworkErrors.CFURLErrorCallIsActive:
+                        case CFNetworkErrors.CFURLErrorDataNotAllowed:
+                            webExceptionStatus = WebExceptionStatus.ConnectFailure;
+                            break;
+                        case CFNetworkErrors.CFURLErrorTimedOut:
+                        case CFNetworkErrors.CFNetServiceErrorTimeout:
+                            webExceptionStatus = WebExceptionStatus.Timeout;
+                            break;
+                        case CFNetworkErrors.CFHostErrorHostNotFound:
+                        case CFNetworkErrors.CFURLErrorCannotFindHost:
+                        case CFNetworkErrors.CFURLErrorDNSLookupFailed:
+                        case CFNetworkErrors.CFNetServiceErrorDNSServiceFailure:
+                            webExceptionStatus = WebExceptionStatus.NameResolutionFailure;
+                            break;
+                        case CFNetworkErrors.CFURLErrorDataLengthExceedsMaximum:
+                            webExceptionStatus = WebExceptionStatus.MessageLengthLimitExceeded;
+                            break;
+                        case CFNetworkErrors.CFErrorHttpConnectionLost:
+                        case CFNetworkErrors.CFURLErrorNetworkConnectionLost:
+                            webExceptionStatus = WebExceptionStatus.ConnectionClosed;
+                            break;
+                        case CFNetworkErrors.CFErrorHttpRedirectionLoopDetected:
+                        case CFNetworkErrors.CFURLErrorHTTPTooManyRedirects:
+                        case CFNetworkErrors.CFURLErrorRedirectToNonExistentLocation:
+                            webExceptionStatus = WebExceptionStatus.ProtocolError;
+                            break;
+                        case CFNetworkErrors.CFSOCKSErrorUnknownClientVersion:
+                        case CFNetworkErrors.CFSOCKSErrorUnsupportedServerVersion:
+                        case CFNetworkErrors.CFErrorHttpParseFailure:
+                        case CFNetworkErrors.CFURLErrorRequestBodyStreamExhausted:
+                            webExceptionStatus = WebExceptionStatus.SendFailure;
+                            break;
+                        case CFNetworkErrors.CFSOCKS4ErrorRequestFailed:
+                        case CFNetworkErrors.CFSOCKS4ErrorIdentdFailed:
+                        case CFNetworkErrors.CFSOCKS4ErrorIdConflict:
+                        case CFNetworkErrors.CFSOCKS4ErrorUnknownStatusCode:
+                        case CFNetworkErrors.CFSOCKS5ErrorBadState:
+                        case CFNetworkErrors.CFSOCKS5ErrorBadResponseAddr:
+                        case CFNetworkErrors.CFURLErrorBadServerResponse:
+                        case CFNetworkErrors.CFURLErrorZeroByteResource:
+                        case CFNetworkErrors.CFURLErrorCannotDecodeRawData:
+                        case CFNetworkErrors.CFURLErrorCannotDecodeContentData:
+                        case CFNetworkErrors.CFURLErrorCannotParseResponse:
+                        case CFNetworkErrors.CFURLErrorFileDoesNotExist:
+                        case CFNetworkErrors.CFURLErrorFileIsDirectory:
+                        case CFNetworkErrors.CFURLErrorNoPermissionsToReadFile:
+                        case CFNetworkErrors.CFURLErrorCannotLoadFromNetwork:
+                        case CFNetworkErrors.CFURLErrorCannotCreateFile:
+                        case CFNetworkErrors.CFURLErrorCannotOpenFile:
+                        case CFNetworkErrors.CFURLErrorCannotCloseFile:
+                        case CFNetworkErrors.CFURLErrorCannotWriteToFile:
+                        case CFNetworkErrors.CFURLErrorCannotRemoveFile:
+                        case CFNetworkErrors.CFURLErrorCannotMoveFile:
+                        case CFNetworkErrors.CFURLErrorDownloadDecodingFailedMidStream:
+                        case CFNetworkErrors.CFURLErrorDownloadDecodingFailedToComplete:
+                        case CFNetworkErrors.CFHTTPCookieCannotParseCookieFile:
+                        case CFNetworkErrors.CFNetServiceErrorUnknown:
+                        case CFNetworkErrors.CFNetServiceErrorCollision:
+                        case CFNetworkErrors.CFNetServiceErrorNotFound:
+                        case CFNetworkErrors.CFNetServiceErrorInProgress:
+                        case CFNetworkErrors.CFNetServiceErrorBadArgument:
+                        case CFNetworkErrors.CFNetServiceErrorInvalid:
+                            webExceptionStatus = WebExceptionStatus.ReceiveFailure;
+                            break;
+                        case CFNetworkErrors.CFURLErrorServerCertificateHasBadDate:
+                        case CFNetworkErrors.CFURLErrorServerCertificateUntrusted:
+                        case CFNetworkErrors.CFURLErrorServerCertificateHasUnknownRoot:
+                        case CFNetworkErrors.CFURLErrorServerCertificateNotYetValid:
+                        case CFNetworkErrors.CFURLErrorClientCertificateRejected:
+                        case CFNetworkErrors.CFURLErrorClientCertificateRequired:
+                            webExceptionStatus = WebExceptionStatus.TrustFailure;
+                            break;
+                        case CFNetworkErrors.CFURLErrorSecureConnectionFailed:
+                            webExceptionStatus = WebExceptionStatus.SecureChannelFailure;
+                            break;
+                        case CFNetworkErrors.CFErrorHttpProxyConnectionFailure:
+                        case CFNetworkErrors.CFErrorHttpBadProxyCredentials:
+                        case CFNetworkErrors.CFErrorPACFileError:
+                        case CFNetworkErrors.CFErrorPACFileAuth:
+                        case CFNetworkErrors.CFErrorHttpsProxyConnectionFailure:
+                        case CFNetworkErrors.CFStreamErrorHttpsProxyFailureUnexpectedResponseToConnectMethod:
+                            webExceptionStatus = WebExceptionStatus.RequestProhibitedByProxy;
+                            break;
+                    }
                 }
 
-                // If we parsed a web exception status code, create an exception
-                // for it
-                if (webExceptionStatus != WebExceptionStatus.UnknownError) {
-                    ret = new WebException(error.LocalizedDescription, webExceptionStatus);
-                }
-
-            leave:
-                // If no exception generated yet, throw a normal exception with
-                // the error message.
-                return ret ?? new Exception(error.LocalizedDescription);
+                // Always create a WebException so that it can be handled by the client.
+                ret = new WebException(error.LocalizedDescription, innerException, webExceptionStatus, response: null);
+                return ret;
             }
         }
     }

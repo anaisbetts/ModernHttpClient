@@ -48,6 +48,8 @@
     <Compile Include="ProgressStreamContent.cs" />
     <Compile Include="Utility.cs" />
     <Compile Include="iOS\NativeCookieHandler.cs" />
+    <Compile Include="iOS\CFNetworkErrors.cs" />
+    <Compile Include="iOS\NSErrorExtended.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
