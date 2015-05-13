@@ -302,7 +302,8 @@ namespace ModernHttpClient
                 }
 
             sslErrorVerify:
-                bool result = ServicePointManager.ServerCertificateValidationCallback(this, root, chain, errors);
+                var hostname = task.CurrentRequest.Url.AbsoluteString;
+                bool result = ServicePointManager.ServerCertificateValidationCallback(hostname, root, chain, errors);
                 if (result) {
                     completionHandler(
                         NSUrlSessionAuthChallengeDisposition.UseCredential,

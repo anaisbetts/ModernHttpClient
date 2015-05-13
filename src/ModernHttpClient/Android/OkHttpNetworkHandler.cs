@@ -208,7 +208,7 @@ namespace ModernHttpClient
         /// <returns><c>true</c>, if server certificate was verifyed, <c>false</c> otherwise.</returns>
         /// <param name="hostname"></param>
         /// <param name="session"></param>
-        bool verifyServerCertificate(string hostname, ISSLSession session)
+        static bool verifyServerCertificate(string hostname, ISSLSession session)
         {
             var defaultVerifier = HttpsURLConnection.DefaultHostnameVerifier;
 
@@ -216,8 +216,8 @@ namespace ModernHttpClient
 
             // Convert java certificates to .NET certificates and build cert chain from root certificate
             var certificates = session.GetPeerCertificateChain();
-            var chain = new System.Security.Cryptography.X509Certificates.X509Chain();
-            System.Security.Cryptography.X509Certificates.X509Certificate2 root = null;
+            var chain = new X509Chain();
+            X509Certificate2 root = null;
             var errors = System.Net.Security.SslPolicyErrors.None;
 
             // Build certificate chain and check for errors
@@ -231,7 +231,7 @@ namespace ModernHttpClient
                 goto bail;
             } 
 
-            var netCerts = certificates.Select(x => new System.Security.Cryptography.X509Certificates.X509Certificate2(x.GetEncoded())).ToArray();
+            var netCerts = certificates.Select(x => new X509Certificate2(x.GetEncoded())).ToArray();
 
             for (int i = 1; i < netCerts.Length; i++) {
                 chain.ChainPolicy.ExtraStore.Add(netCerts[i]);
@@ -239,11 +239,10 @@ namespace ModernHttpClient
 
             root = netCerts[0];
 
-            chain.ChainPolicy.RevocationFlag = System.Security.Cryptography.X509Certificates.X509RevocationFlag.EntireChain;
-            chain.ChainPolicy.RevocationMode = System.Security.Cryptography.X509Certificates.X509RevocationMode.NoCheck;
+            chain.ChainPolicy.RevocationFlag = X509RevocationFlag.EntireChain;
+            chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
             chain.ChainPolicy.UrlRetrievalTimeout = new TimeSpan(0, 1, 0);
-            chain.ChainPolicy.VerificationFlags = 
-                    System.Security.Cryptography.X509Certificates.X509VerificationFlags.AllowUnknownCertificateAuthority;
+            chain.ChainPolicy.VerificationFlags = X509VerificationFlags.AllowUnknownCertificateAuthority;
 
             if (!chain.Build(root)) {
                 errors = System.Net.Security.SslPolicyErrors.RemoteCertificateChainErrors;
@@ -260,7 +259,7 @@ namespace ModernHttpClient
 
         bail:
             // Call the delegate to validate
-            return ServicePointManager.ServerCertificateValidationCallback(this, root, chain, errors);
+            return ServicePointManager.ServerCertificateValidationCallback(hostname, root, chain, errors);
         }
 
         /// <summary>
@@ -269,7 +268,7 @@ namespace ModernHttpClient
         /// <returns><c>true</c>, if client ciphers was verifyed, <c>false</c> otherwise.</returns>
         /// <param name="hostname"></param>
         /// <param name="session"></param>
-        bool verifyClientCiphers(string hostname, ISSLSession session)
+        static bool verifyClientCiphers(string hostname, ISSLSession session)
         {
             var callback = ServicePointManager.ClientCipherSuitesCallback;
             if (callback == null) return true;
