@@ -414,8 +414,8 @@ namespace ModernHttpClient
 
                     goto done;
                 } 
-		
-		        if (error.Domain == CFNetworkError.ErrorDomain) {
+
+                if (error.Domain == CFNetworkError.ErrorDomain) {
                     // Convert the error code into an enumeration (this is future
                     // proof, rather than just casting integer)
                     CFNetworkErrors networkError;
