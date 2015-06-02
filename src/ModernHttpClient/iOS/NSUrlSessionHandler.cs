@@ -302,7 +302,7 @@ namespace ModernHttpClient
                 }
 
             sslErrorVerify:
-                var hostname = task.CurrentRequest.Url.AbsoluteString;
+                var hostname = task.CurrentRequest.Url.Host;
                 bool result = ServicePointManager.ServerCertificateValidationCallback(hostname, root, chain, errors);
                 if (result) {
                     completionHandler(
