@@ -152,8 +152,10 @@ namespace ModernHttpClient
 
             var respHeaders = resp.Headers();
             foreach (var k in respHeaders.Names()) {
-                ret.Headers.TryAddWithoutValidation(k, respHeaders.Get(k));
-                ret.Content.Headers.TryAddWithoutValidation(k, respHeaders.Get(k));
+				foreach (string item in respHeaders.Values(k)) {
+					ret.Headers.TryAddWithoutValidation(k, item);
+					ret.Content.Headers.TryAddWithoutValidation(k, item);
+				}               
             }
 
             return ret;
