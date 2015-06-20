@@ -248,6 +248,16 @@ namespace ModernHttpClient
                     goto doDefault;
                 }
 
+				// According to https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/URLLoadingSystem/Articles/AuthenticationChallenges.html
+				// "Some" possibilities:
+				// NSURLAuthenticationMethodHTTPBasic
+				// NSURLAuthenticationMethodHTTPDigest
+				// NSURLAuthenticationMethodClientCertificate
+				// NSURLAuthenticationMethodServerTrust
+
+				// TODO: Could it be all these things? Would we know it? (Answer is that it is either or)
+				// See http://stackoverflow.com/questions/21537203/ios-nsurlauthenticationmethodclientcertificate-not-requested-vs-activesync-serve
+
                 if (challenge.ProtectionSpace.AuthenticationMethod != "NSURLAuthenticationMethodServerTrust") {
                     goto doDefault;
                 }
