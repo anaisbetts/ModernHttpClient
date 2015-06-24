@@ -13,6 +13,10 @@ using System.Security.Cryptography.X509Certificates;
 using System.Globalization;
 using Android.OS;
 
+// See http://chariotsolutions.com/blog/post/https-with-client-certificates-on/
+// for clue on Android client certs http://square.github.io/okhttp/javadoc/com/squareup/okhttp/CertificatePinner.html
+
+
 namespace ModernHttpClient
 {
     public class NativeMessageHandler : HttpClientHandler

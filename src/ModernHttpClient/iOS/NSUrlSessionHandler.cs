@@ -14,6 +14,7 @@ using ModernHttpClient.Foundation;
 
 #if UNIFIED
 using Foundation;
+using Security;
 #else
 using MonoTouch.Foundation;
 using System.Globalization;
@@ -50,6 +51,7 @@ namespace ModernHttpClient
         readonly bool customSSLVerification;
 
         public bool DisableCaching { get; set; }
+        public X509Certificate2 ClientCertificate { get; set; }
 
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
@@ -242,26 +244,65 @@ namespace ModernHttpClient
 
             static readonly Regex cnRegex = new Regex(@"CN\s*=\s*([^,]*)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
 
+            private NSUrlCredential exportCredential(byte[] pfxData, string password)
+            {
+                NSDictionary[] items;
+                NSDictionary opt = NSDictionary.FromObjectsAndKeys(new object[] { password }, new object[] { "passphrase" });
+
+                var status = SecImportExport.ImportPkcs12(pfxData, opt, out items);
+
+                if (status == SecStatusCode.Success)
+                {
+                    var identityRef = items[0]["identity"];
+
+                    var identity = new SecIdentity(identityRef.Handle);
+
+                    SecCertificate[] certs = { identity.Certificate };
+
+                    var credential = new NSUrlCredential(identity, certs, NSUrlCredentialPersistence.ForSession);
+                    return credential;
+                }
+                
+                return null;
+            }
+
             public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
             {
                 if (!This.customSSLVerification) {
                     goto doDefault;
                 }
 
-				// According to https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/URLLoadingSystem/Articles/AuthenticationChallenges.html
-				// "Some" possibilities:
-				// NSURLAuthenticationMethodHTTPBasic
-				// NSURLAuthenticationMethodHTTPDigest
-				// NSURLAuthenticationMethodClientCertificate
-				// NSURLAuthenticationMethodServerTrust
-
-				// TODO: Could it be all these things? Would we know it? (Answer is that it is either or)
-				// See http://stackoverflow.com/questions/21537203/ios-nsurlauthenticationmethodclientcertificate-not-requested-vs-activesync-serve
-
-                if (challenge.ProtectionSpace.AuthenticationMethod != "NSURLAuthenticationMethodServerTrust") {
-                    goto doDefault;
+                // https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/URLLoadingSystem/Articles/AuthenticationChallenges.html\
+                // For Client Certificate,  
+                //      http://stackoverflow.com/questions/21537203/ios-nsurlauthenticationmethodclientcertificate-not-requested-vs-activesync-serve
+                //      http://www.sunethmendis.com/2013/01/11/certificate-based-client-authentication-in-ios/
+                //      https://forums.xamarin.com/discussion/39535/didreceivechallenge-issue-with-x509-certificates
+                switch (challenge.ProtectionSpace.AuthenticationMethod)
+                {
+                    case "NSURLAuthenticationMethodServerTrust":
+                        goto serverTrust;
+                    case "NSURLAuthenticationMethodClientCertificate":
+                        goto clientCert;
+                    case "NSURLAuthenticationMethodHTTPBasic":
+                    case "NSURLAuthenticationMethodHTTPDigest":
+                    case "NSURLAuthenticationMethodNTLM":
+                    default:
+                        goto doDefault;
                 }
 
+            clientCert:
+                if (This.ClientCertificate == null)
+                    goto doDefault;
+
+                var cert = new SecCertificate(This.ClientCertificate);
+                
+
+                var credential = exportCredential(cert);
+                challenge.Sender.UseCredential(credential, challenge);
+
+                goto doDefault;
+
+            serverTrust:
                 if (ServicePointManager.ServerCertificateValidationCallback == null) {
                     goto doDefault;
                 }
