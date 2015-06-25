@@ -53,15 +53,16 @@ namespace ModernHttpClient
         readonly bool customSSLVerification;
 
         public bool DisableCaching { get; set; }
-        public byte[] PfxData { get; set; }
-        public string PfxPassword { get; set; }
 
         public NativeMessageHandler(): this(false, false) { }
-        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
+        public NativeMessageHandler(
+            bool throwOnCaptiveNetwork, bool customSSLVerification, 
+            NativeCookieHandler cookieHandler = null,
+            byte[] pfxData = null, string pfxPassword = null)
         {
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
-                new DataTaskDelegate(this), null);
+                new DataTaskDelegate(this, pfxData, pfxPassword), null);
 
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
@@ -147,10 +148,16 @@ namespace ModernHttpClient
         class DataTaskDelegate : NSUrlSessionDataDelegate
         {
             NativeMessageHandler This { get; set; }
+            NSUrlCredential _credential;
 
-            public DataTaskDelegate(NativeMessageHandler that)
+            public DataTaskDelegate(NativeMessageHandler that, byte[] pfxData = null, string pfxPassword = null)
             {
                 this.This = that;
+
+                if (pfxData != null)
+                {
+                    _credential = exportCredential(pfxData, pfxPassword);
+                }
             }
 
             public override void DidReceiveResponse(NSUrlSession session, NSUrlSessionDataTask dataTask, NSUrlResponse response, Action<NSUrlSessionResponseDisposition> completionHandler)
@@ -301,14 +308,13 @@ namespace ModernHttpClient
                 }
 
             clientCert:
-                if (This.PfxData == null)
+                if (_credential == null)
                     goto doDefault;
 
-                var credential = exportCredential(This.PfxData, This.PfxPassword);
 #if UNIFIED
-                challenge.Sender.UseCredential(credential, challenge);
+                challenge.Sender.UseCredential(_credential, challenge);
 #else
-                challenge.Sender.UseCredentials(credential, challenge);
+                challenge.Sender.UseCredentials(_credential, challenge);
 #endif
                 goto doDefault;
 
