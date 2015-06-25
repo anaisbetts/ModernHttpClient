@@ -305,8 +305,11 @@ namespace ModernHttpClient
                     goto doDefault;
 
                 var credential = exportCredential(This.PfxData, This.PfxPassword);
+#if UNIFIED
+                challenge.Sender.UseCredential(credential, challenge);
+#else
                 challenge.Sender.UseCredentials(credential, challenge);
-
+#endif
                 goto doDefault;
 
             serverTrust:
