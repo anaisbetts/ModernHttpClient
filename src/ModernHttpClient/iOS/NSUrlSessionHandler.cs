@@ -11,12 +11,14 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using ModernHttpClient.CoreFoundation;
 using ModernHttpClient.Foundation;
+using System.Security;
 
 #if UNIFIED
 using Foundation;
 using Security;
 #else
 using MonoTouch.Foundation;
+using MonoTouch.Security;
 using System.Globalization;
 #endif
 
@@ -51,7 +53,8 @@ namespace ModernHttpClient
         readonly bool customSSLVerification;
 
         public bool DisableCaching { get; set; }
-        public X509Certificate2 ClientCertificate { get; set; }
+        public byte[] PfxData { get; set; }
+        public string PfxPassword { get; set; }
 
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
@@ -244,10 +247,17 @@ namespace ModernHttpClient
 
             static readonly Regex cnRegex = new Regex(@"CN\s*=\s*([^,]*)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
 
-            private NSUrlCredential exportCredential(byte[] pfxData, string password)
+            private static NSUrlCredential exportCredential(byte[] pfxData, string password = null)
             {
                 NSDictionary[] items;
-                NSDictionary opt = NSDictionary.FromObjectsAndKeys(new object[] { password }, new object[] { "passphrase" });
+                NSDictionary opt;
+
+                if (String.IsNullOrEmpty(password)) {
+                    opt = new NSDictionary();
+                } else {
+                    opt = NSDictionary.FromObjectsAndKeys(
+                        new object[] { password }, new object[] { "passphrase" });
+                }
 
                 var status = SecImportExport.ImportPkcs12(pfxData, opt, out items);
 
@@ -291,14 +301,11 @@ namespace ModernHttpClient
                 }
 
             clientCert:
-                if (This.ClientCertificate == null)
+                if (This.PfxData == null)
                     goto doDefault;
 
-                var cert = new SecCertificate(This.ClientCertificate);
-                
-
-                var credential = exportCredential(cert);
-                challenge.Sender.UseCredential(credential, challenge);
+                var credential = exportCredential(This.PfxData, This.PfxPassword);
+                challenge.Sender.UseCredentials(credential, challenge);
 
                 goto doDefault;
 
