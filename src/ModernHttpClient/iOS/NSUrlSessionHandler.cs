@@ -244,6 +244,24 @@ namespace ModernHttpClient
 
             public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
             {
+               
+
+                if (challenge.ProtectionSpace.AuthenticationMethod == NSUrlProtectionSpace.AuthenticationMethodNTLM) {
+                    NetworkCredential credentialsToUse;
+
+                    if (This.Credentials != null) {
+                        if (This.Credentials is NetworkCredential) {
+                            credentialsToUse = (NetworkCredential)This.Credentials;
+                        } else {
+                            var uri = this.getResponseForTask(task).Request.RequestUri;
+                            credentialsToUse = This.Credentials.GetCredential(uri, "NTLM");
+                        }
+                        var credential = new NSUrlCredential(credentialsToUse.UserName, credentialsToUse.Password, NSUrlCredentialPersistence.ForSession);
+                        completionHandler(NSUrlSessionAuthChallengeDisposition.UseCredential, credential);
+                    }
+                    return;
+                }
+
                 if (!This.customSSLVerification) {
                     goto doDefault;
                 }
