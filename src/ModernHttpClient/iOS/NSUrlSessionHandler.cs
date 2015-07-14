@@ -11,11 +11,14 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using ModernHttpClient.CoreFoundation;
 using ModernHttpClient.Foundation;
+using System.Security;
 
 #if UNIFIED
 using Foundation;
+using Security;
 #else
 using MonoTouch.Foundation;
+using MonoTouch.Security;
 using System.Globalization;
 #endif
 
@@ -52,11 +55,14 @@ namespace ModernHttpClient
         public bool DisableCaching { get; set; }
 
         public NativeMessageHandler(): this(false, false) { }
-        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
+        public NativeMessageHandler(
+            bool throwOnCaptiveNetwork, bool customSSLVerification, 
+            NativeCookieHandler cookieHandler = null,
+            byte[] pfxData = null, string pfxPassword = null)
         {
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
-                new DataTaskDelegate(this), null);
+                new DataTaskDelegate(this, pfxData, pfxPassword), null);
 
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
@@ -142,10 +148,16 @@ namespace ModernHttpClient
         class DataTaskDelegate : NSUrlSessionDataDelegate
         {
             NativeMessageHandler This { get; set; }
+            NSUrlCredential _credential;
 
-            public DataTaskDelegate(NativeMessageHandler that)
+            public DataTaskDelegate(NativeMessageHandler that, byte[] pfxData = null, string pfxPassword = null)
             {
                 this.This = that;
+
+                if (pfxData != null)
+                {
+                    _credential = exportCredential(pfxData, pfxPassword);
+                }
             }
 
             public override void DidReceiveResponse(NSUrlSession session, NSUrlSessionDataTask dataTask, NSUrlResponse response, Action<NSUrlSessionResponseDisposition> completionHandler)
@@ -242,6 +254,35 @@ namespace ModernHttpClient
 
             static readonly Regex cnRegex = new Regex(@"CN\s*=\s*([^,]*)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
 
+            private static NSUrlCredential exportCredential(byte[] pfxData, string password = null)
+            {
+                NSDictionary[] items;
+                NSDictionary opt;
+
+                if (String.IsNullOrEmpty(password)) {
+                    opt = new NSDictionary();
+                } else {
+                    opt = NSDictionary.FromObjectsAndKeys(
+                        new object[] { password }, new object[] { "passphrase" });
+                }
+
+                var status = SecImportExport.ImportPkcs12(pfxData, opt, out items);
+
+                if (status == SecStatusCode.Success)
+                {
+                    var identityRef = items[0]["identity"];
+
+                    var identity = new SecIdentity(identityRef.Handle);
+
+                    SecCertificate[] certs = { identity.Certificate };
+
+                    var credential = new NSUrlCredential(identity, certs, NSUrlCredentialPersistence.ForSession);
+                    return credential;
+                }
+                
+                return null;
+            }
+
             public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
             {
                
@@ -266,10 +307,36 @@ namespace ModernHttpClient
                     goto doDefault;
                 }
 
-                if (challenge.ProtectionSpace.AuthenticationMethod != "NSURLAuthenticationMethodServerTrust") {
-                    goto doDefault;
+                // https://developer.apple.com/library/ios/documentation/Cocoa/Conceptual/URLLoadingSystem/Articles/AuthenticationChallenges.html\
+                // For Client Certificate,  
+                //      http://stackoverflow.com/questions/21537203/ios-nsurlauthenticationmethodclientcertificate-not-requested-vs-activesync-serve
+                //      http://www.sunethmendis.com/2013/01/11/certificate-based-client-authentication-in-ios/
+                //      https://forums.xamarin.com/discussion/39535/didreceivechallenge-issue-with-x509-certificates
+                switch (challenge.ProtectionSpace.AuthenticationMethod)
+                {
+                    case "NSURLAuthenticationMethodServerTrust":
+                        goto serverTrust;
+                    case "NSURLAuthenticationMethodClientCertificate":
+                        goto clientCert;
+                    case "NSURLAuthenticationMethodHTTPBasic":
+                    case "NSURLAuthenticationMethodHTTPDigest":
+                    case "NSURLAuthenticationMethodNTLM":
+                    default:
+                        goto doDefault;
                 }
 
+            clientCert:
+                if (_credential == null)
+                    goto doDefault;
+
+#if UNIFIED
+                challenge.Sender.UseCredential(_credential, challenge);
+#else
+                challenge.Sender.UseCredentials(_credential, challenge);
+#endif
+                goto doDefault;
+
+            serverTrust:
                 if (ServicePointManager.ServerCertificateValidationCallback == null) {
                     goto doDefault;
                 }
