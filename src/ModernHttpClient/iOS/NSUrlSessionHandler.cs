@@ -14,8 +14,10 @@ using ModernHttpClient.Foundation;
 
 #if UNIFIED
 using Foundation;
+using Security;
 #else
 using MonoTouch.Foundation;
+using MonoTouch.Security;
 using System.Globalization;
 #endif
 
@@ -52,8 +54,17 @@ namespace ModernHttpClient
         public bool DisableCaching { get; set; }
 
         public NativeMessageHandler(): this(false, false) { }
-        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
+        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null, SslProtocol? minimumSSLProtocol = null)
         {
+            var configuration = NSUrlSessionConfiguration.DefaultSessionConfiguration;
+
+            // System.Net.ServicePointManager.SecurityProtocol provides a mechanism for specifying supported protocol types
+            // for System.Net. Since iOS only provides an API for a minimum and maximum protocol we are not able to port
+            // this configuration directly and instead use the specified minimum value when one is specified.
+            if (minimumSSLProtocol.HasValue) {
+                configuration.TLSMinimumSupportedProtocol = minimumSSLProtocol.Value;
+            }
+
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
                 new DataTaskDelegate(this), null);
