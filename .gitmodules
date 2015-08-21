@@ -1,3 +1,0 @@
-[submodule "vendor/okhttp"]
-	path = vendor/okhttp
-	url = https://github.com/paulcbetts/OkHttp-Xamarin.git

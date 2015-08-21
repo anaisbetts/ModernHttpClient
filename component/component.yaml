@@ -18,8 +18,16 @@ libraries:
   ios-unified: 
     - ../build/Xamarin.iOS10/ModernHttpClient.dll
   android:
-    - ../build/MonoAndroid/OkHttp.dll
     - ../build/MonoAndroid/ModernHttpClient.dll
+is_shell: true
+packages:
+  android:
+    - Square.OkHttp, Version=2.4.0.3
+    - modernhttpclient, Version=2.4.2
+  ios:
+    - modernhttpclient, Version=2.4.2
+  ios-unified:
+    - modernhttpclient, Version=2.4.2
 samples: 
   - name: "HttpClient.iOS Unified API Sample"
     path: ../samples/HttpClient.iOS/HttpClient.iOS.sln

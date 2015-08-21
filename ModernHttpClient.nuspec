@@ -12,6 +12,9 @@
     <description>Write your app using System.Net.Http, but drop this library in and it will go drastically faster.</description>
     <summary>Write your app using System.Net.Http, but drop this library in and it will go drastically faster.</summary>
     <copyright>Copyright Paul Betts © 2012</copyright>
+    <dependencies>
+      <dependency id="Square.OkHttp" version="2.4.0.3" />
+    </dependencies>
   </metadata>
 
   <files>
