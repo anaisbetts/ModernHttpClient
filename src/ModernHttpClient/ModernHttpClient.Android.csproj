@@ -54,12 +54,16 @@
     <Folder Include="Properties\" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="ProgressStreamContent.cs" />
-    <Reference Include="OkHttp">
-      <HintPath>..\..\vendor\okhttp\OkHttp.dll</HintPath>
-    </Reference>
     <Compile Include="Utility.cs" />
     <Compile Include="CaptiveNetworkException.cs" />
     <Compile Include="Android\NativeCookieHandler.cs" />
+    <Reference Include="Square.OkIO">
+      <HintPath>..\..\packages\Square.OkIO.1.5.0.0\lib\MonoAndroid\Square.OkIO.dll</HintPath>
+    </Reference>
+    <None Include="packages.config" />
+    <Reference Include="Square.OkHttp">
+      <HintPath>..\..\packages\Square.OkHttp.2.4.0.3\lib\MonoAndroid\Square.OkHttp.dll</HintPath>
+    </Reference>
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Novell\Novell.MonoDroid.CSharp.targets" />
 </Project>
