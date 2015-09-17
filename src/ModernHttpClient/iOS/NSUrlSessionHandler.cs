@@ -297,20 +297,22 @@ namespace ModernHttpClient
                     goto sslErrorVerify;
                 }
 
+                var netCerts = Enumerable.Range(0, serverCertChain.Count)
+                    .Select(x => serverCertChain[x].ToX509Certificate2())
+                    .ToArray();
+
+                root = netCerts[0];
+
+                chain.Build(root);
+
                 if (serverCertChain.Count == 1) {
                     errors = SslPolicyErrors.RemoteCertificateChainErrors;
                     goto sslErrorVerify;
                 }
 
-                var netCerts = Enumerable.Range(0, serverCertChain.Count)
-                    .Select(x => serverCertChain[x].ToX509Certificate2())
-                    .ToArray();
-
                 for (int i = 1; i < netCerts.Length; i++) {
                     chain.ChainPolicy.ExtraStore.Add(netCerts[i]);
                 }
-
-                root = netCerts[0];
 
                 chain.ChainPolicy.RevocationFlag = X509RevocationFlag.EntireChain;
                 chain.ChainPolicy.RevocationMode = X509RevocationMode.NoCheck;
