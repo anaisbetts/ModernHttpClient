@@ -21,7 +21,7 @@ namespace ModernHttpClient
             }
         }
             
-        public List<Cookie> Cookies {
+        public IReadOnlyList<Cookie> Cookies {
             get {
                 return cookieManager.CookieStore.Cookies
                     .Select(ToNetCookie)
