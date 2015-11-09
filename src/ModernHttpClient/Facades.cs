@@ -20,6 +20,7 @@ namespace ModernHttpClient
         /// </summary>
         public NativeMessageHandler(): base()
         {
+            throw new Exception(wrongVersion);
         }
 
         /// <summary>
@@ -43,6 +44,14 @@ namespace ModernHttpClient
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
         {
             throw new Exception(wrongVersion);
+        }
+
+        /// <summary>
+        /// Gets or sets the number of milliseconds to wait before the request times out.
+        /// </summary>
+        public TimeSpan? TimeOut {
+            get { throw new Exception(wrongVersion);}
+            set { throw new Exception(wrongVersion);}
         }
     }
 
