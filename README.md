@@ -7,7 +7,7 @@ System.Net.Http, but drop this library in and it will go drastically faster.
 This is made possible by two native libraries:
 
 * On iOS, [NSURLSession](https://developer.apple.com/library/ios/documentation/Foundation/Reference/NSURLSession_class/Introduction/Introduction.html)
-* On Android, via [OkHttp 1.5](http://square.github.io/okhttp/)
+* On Android, via [OkHttp](http://square.github.io/okhttp/)
 
 ## Usage
 
