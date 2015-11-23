@@ -9,8 +9,10 @@ using System.Net;
 using System.Net.Security;
 using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
+#if !XAMARIN_MODERN
 using ModernHttpClient.CoreFoundation;
 using ModernHttpClient.Foundation;
+#endif
 
 #if UNIFIED
 using Foundation;
@@ -21,8 +23,14 @@ using MonoTouch.Security;
 using System.Globalization;
 #endif
 
+#if XAMARIN_MODERN
+using NativeMessageHandler = System.Net.Http.NSUrlSessionHandler;
+
+namespace System.Net.Http {
+#else
 namespace ModernHttpClient
 {
+#endif
     class InflightOperation
     {
         public HttpRequestMessage Request { get; set; }
@@ -33,7 +41,11 @@ namespace ModernHttpClient
         public bool IsCompleted { get; set; }
     }
 
+#if XAMARIN_MODERN
+    public partial class NSUrlSessionHandler : HttpMessageHandler
+#else
     public class NativeMessageHandler : HttpClientHandler
+#endif
     {
         readonly NSUrlSession session;
 
@@ -53,8 +65,13 @@ namespace ModernHttpClient
 
         public bool DisableCaching { get; set; }
 
+#if XAMARIN_MODERN
+        public NSUrlSessionHandler(): this(false, false) { }
+        public NSUrlSessionHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, SslProtocol? minimumSSLProtocol = null)
+#else
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null, SslProtocol? minimumSSLProtocol = null)
+#endif
         {
             var configuration = NSUrlSessionConfiguration.DefaultSessionConfiguration;
 
@@ -107,6 +124,9 @@ namespace ModernHttpClient
             }
         }
 
+#if XAMARIN_MODERN
+        internal
+#endif
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var headers = request.Headers as IEnumerable<KeyValuePair<string, IEnumerable<string>>>;
@@ -171,9 +191,11 @@ namespace ModernHttpClient
                     var resp = (NSHttpUrlResponse)response;
                     var req = data.Request;
 
+#if !XAMARIN_MODERN
                     if (This.throwOnCaptiveNetwork && req.RequestUri.Host != resp.Url.Host) {
                         throw new CaptiveNetworkException(req.RequestUri, new Uri(resp.Url.ToString()));
                     }
+#endif
 
                     var content = new CancellableStreamContent(data.ResponseBody, () => {
                         if (!data.IsCompleted) {
@@ -257,7 +279,9 @@ namespace ModernHttpClient
                 }
             }
 
+#if !XAMARIN_MODERN
             static readonly Regex cnRegex = new Regex(@"CN\s*=\s*([^,]*)", RegexOptions.Compiled | RegexOptions.CultureInvariant | RegexOptions.Singleline);
+#endif
 
             public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
             {
@@ -278,7 +302,7 @@ namespace ModernHttpClient
                     }
                     return;
                 }
-
+#if !XAMARIN_MODERN
                 if (!This.customSSLVerification) {
                     goto doDefault;
                 }
@@ -349,6 +373,7 @@ namespace ModernHttpClient
                 return;
 
             doDefault:
+#endif
                 completionHandler(NSUrlSessionAuthChallengeDisposition.PerformDefaultHandling, challenge.ProposedCredential);
                 return;
             }
@@ -359,6 +384,7 @@ namespace ModernHttpClient
                 completionHandler(nextRequest);
             }
 
+#if !XAMARIN_MODERN
             static Exception createExceptionForNSError(NSError error)
             {
                 var ret = default(Exception);
@@ -578,6 +604,7 @@ namespace ModernHttpClient
                 ret = new WebException(error.LocalizedDescription, innerException, webExceptionStatus, response: null);
                 return ret;
             }
+#endif // !XAMARIN
         }
     }
             
