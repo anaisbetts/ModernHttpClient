@@ -211,6 +211,12 @@ namespace ModernHttpClient
                 completionHandler(NSUrlSessionResponseDisposition.Allow);
             }
 
+            public override void WillCacheResponse (NSUrlSession session, NSUrlSessionDataTask dataTask,
+                NSCachedUrlResponse proposedResponse, Action<NSCachedUrlResponse> completionHandler)
+            {
+                completionHandler (This.DisableCaching ? null : proposedResponse);
+            }
+
             public override void DidCompleteWithError (NSUrlSession session, NSUrlSessionTask task, NSError error)
             {
                 var data = getResponseForTask(task);
