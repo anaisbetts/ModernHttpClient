@@ -9,6 +9,11 @@
         android:layout_height="wrap_content"
         android:text="@string/hello" />
     <Button
+        android:id="@+id/upload"
+        android:layout_width="fill_parent"
+        android:layout_height="wrap_content"
+        android:text="Upload" />
+    <Button
         android:text="Cancel!"
         android:layout_width="fill_parent"
         android:layout_height="wrap_content"

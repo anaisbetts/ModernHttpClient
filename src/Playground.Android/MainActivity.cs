@@ -70,6 +70,7 @@ namespace Playground.Android
             // Get our button from the layout resource,
             // and attach an event to it
             var button = FindViewById<Button>(Resource.Id.doIt);
+            var upload_button = FindViewById<Button>(Resource.Id.upload);
             var cancel = FindViewById<Button>(Resource.Id.cancelButton);
             var result = FindViewById<TextView>(Resource.Id.result);
             var hashView = FindViewById<TextView>(Resource.Id.md5sum);
@@ -82,6 +83,14 @@ namespace Playground.Android
                 Console.WriteLine("Canceled token {0:x8}", this.currentToken.Token.GetHashCode());
                 this.currentToken.Cancel();
                 if (resp != null) resp.Content.Dispose();
+            };
+
+            upload_button.Click += async (o, e) => {
+                var handler = new NativeMessageHandler ();
+                var client = new HttpClient (handler);
+
+                var content = new byte[] { 20, 20, 20 };
+                await client.PostAsync ("http://www.yahoo.com", new ByteArrayContent (content));
             };
 
             button.Click += async (o, e) => {
