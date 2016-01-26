@@ -34,9 +34,23 @@ namespace ModernHttpClient
 
         protected OkHttpClient Client { get { return client; } }
 
-        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
+        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, bool enableRc4Compatibility = false, NativeCookieHandler cookieHandler = null)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+
+            /// CUSTOM CODE ///
+            if (enableRc4Compatibility)
+            {
+                var compatibleTls = ConnectionSpec.CompatibleTls;
+                var ciphersOfCompatibleTls = compatibleTls.CipherSuites().ToList();
+                ciphersOfCompatibleTls.Add(CipherSuite.TlsRsaWithRc4128Sha);
+                var modifiedCompatibleTls = new ConnectionSpec.Builder(ConnectionSpec.CompatibleTls)
+                    .TlsVersions(compatibleTls.TlsVersions().ToArray())
+                    .CipherSuites(ciphersOfCompatibleTls.ToArray())
+                    .Build();
+                client = client.SetConnectionSpecs(new List<ConnectionSpec> { modifiedCompatibleTls });
+            }
+            /// CUSTOM CODE ///
 
             if (customSSLVerification) client.SetHostnameVerifier(new HostnameVerifier());
             noCacheCacheControl = (new CacheControl.Builder()).NoCache().Build();

@@ -72,7 +72,7 @@ namespace Playground.iOS
 
         async partial void doIt (Foundation.NSObject sender)
         {
-            var handler = new NativeMessageHandler();
+            var handler = new NativeMessageHandler(throwOnCaptiveNetwork: false, customSSLVerification: true, enableRc4Compatibility: false);
             var client = new HttpClient(handler);
 
             currentToken = new CancellationTokenSource();
