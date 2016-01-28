@@ -24,9 +24,14 @@ using System.Globalization;
 #endif
 
 #if XAMARIN_MODERN
-using NativeMessageHandler = System.Net.Http.NSUrlSessionHandler;
 
+#if SYSTEM_NET_HTTP
+using NativeMessageHandler = System.Net.Http.NSUrlSessionHandler;
 namespace System.Net.Http {
+#else
+using NativeMessageHandler = Foundation.NSUrlSessionHandler;
+namespace Foundation {
+#endif
 #else
 namespace ModernHttpClient
 {
@@ -52,22 +57,25 @@ namespace ModernHttpClient
         readonly Dictionary<NSUrlSessionTask, InflightOperation> inflightRequests = 
             new Dictionary<NSUrlSessionTask, InflightOperation>();
 
+#if !XAMARIN_MODERN
         readonly Dictionary<HttpRequestMessage, ProgressDelegate> registeredProgressCallbacks = 
             new Dictionary<HttpRequestMessage, ProgressDelegate>();
+#endif
 
         readonly Dictionary<string, string> headerSeparators =
             new Dictionary<string, string>(){ 
                 {"User-Agent", " "}
             };
 
+#if !XAMARIN_MODERN
         readonly bool throwOnCaptiveNetwork;
         readonly bool customSSLVerification;
+#endif
 
         public bool DisableCaching { get; set; }
 
 #if XAMARIN_MODERN
-        public NSUrlSessionHandler(): this(false, false) { }
-        public NSUrlSessionHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, SslProtocol? minimumSSLProtocol = null)
+        public NSUrlSessionHandler()
 #else
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null, SslProtocol? minimumSSLProtocol = null)
@@ -75,19 +83,34 @@ namespace ModernHttpClient
         {
             var configuration = NSUrlSessionConfiguration.DefaultSessionConfiguration;
 
+#if XAMARIN_MODERN
+			// we cannot do a bitmask but we can set the minimum based on ServicePointManager.SecurityProtocol minimum
+			var sp = ServicePointManager.SecurityProtocol;
+			if ((sp & SecurityProtocolType.Ssl3) != 0)
+				configuration.TLSMinimumSupportedProtocol = SslProtocol.Ssl_3_0;
+			else if ((sp & SecurityProtocolType.Tls) != 0)
+				configuration.TLSMinimumSupportedProtocol = SslProtocol.Tls_1_0;
+			else if ((sp & SecurityProtocolType.Tls11) != 0)
+				configuration.TLSMinimumSupportedProtocol = SslProtocol.Tls_1_1;
+			else if ((sp & SecurityProtocolType.Tls12) != 0)
+				configuration.TLSMinimumSupportedProtocol = SslProtocol.Tls_1_2;
+#else
             // System.Net.ServicePointManager.SecurityProtocol provides a mechanism for specifying supported protocol types
             // for System.Net. Since iOS only provides an API for a minimum and maximum protocol we are not able to port
             // this configuration directly and instead use the specified minimum value when one is specified.
             if (minimumSSLProtocol.HasValue) {
                 configuration.TLSMinimumSupportedProtocol = minimumSSLProtocol.Value;
             }
+#endif
 
             session = NSUrlSession.FromConfiguration(
                 NSUrlSessionConfiguration.DefaultSessionConfiguration, 
                 new DataTaskDelegate(this), null);
 
+#if !XAMARIN_MODERN
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
+#endif
 
             this.DisableCaching = false;
         }
@@ -101,6 +124,7 @@ namespace ModernHttpClient
             return ",";
         }
 
+#if !XAMARIN_MODERN
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
         {
             if (callback == null && registeredProgressCallbacks.ContainsKey(request)) {
@@ -123,12 +147,16 @@ namespace ModernHttpClient
                 return callback;
             }
         }
+#endif
 
-#if XAMARIN_MODERN
+#if SYSTEM_NET_HTTP
         internal
 #endif
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+#if XAMARIN_MODERN
+            Volatile.Write (ref sentRequest, true);
+#endif
             var headers = request.Headers as IEnumerable<KeyValuePair<string, IEnumerable<string>>>;
             var ms = new MemoryStream();
 
@@ -160,7 +188,9 @@ namespace ModernHttpClient
                 inflightRequests[op] = new InflightOperation() {
                     FutureResponse = ret,
                     Request = request,
+#if !XAMARIN_MODERN
                     Progress = getAndRemoveCallbackFromRegister(request),
+#endif
                     ResponseBody = new ByteArrayListStream(),
                     CancellationToken = cancellationToken,
                 };

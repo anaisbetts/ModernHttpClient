@@ -11,7 +11,10 @@ namespace System.Net.Http {
 namespace ModernHttpClient
 {
 #endif
-    public delegate void ProgressDelegate (long bytes, long totalBytes, long totalBytesExpected);
+#if !XAMARIN_MODERN
+    public
+#endif
+    delegate void ProgressDelegate (long bytes, long totalBytes, long totalBytesExpected);
 
 #if !XAMARIN_MODERN
     public
@@ -81,7 +84,7 @@ namespace ModernHttpClient
             }
         }
 
-#if XAMARIN_MODERN
+#if SYSTEM_NET_HTTP
         internal
 #endif
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
@@ -90,7 +93,7 @@ namespace ModernHttpClient
             return base.SerializeToStreamAsync(stream, context);
         }
 
-#if XAMARIN_MODERN
+#if SYSTEM_NET_HTTP
         internal
 #endif
         protected override bool TryComputeLength(out long length)
