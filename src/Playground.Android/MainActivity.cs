@@ -85,7 +85,8 @@ namespace Playground.Android
             };
 
             button.Click += async (o, e) => {
-                var handler = new NativeMessageHandler();
+                var handler = new NativeMessageHandler(throwOnCaptiveNetwork: false, customSSLVerification: true, enableRc4Compatibility: true, enableClearTextCompatibility: true);
+                
                 var client = new HttpClient(handler);
 
                 currentToken = new CancellationTokenSource();
@@ -99,7 +100,13 @@ namespace Playground.Android
                 try {
                     //var url = "https://tv.eurosport.com";
                     //var url = "https://github.com/downloads/nadlabak/android/cm-9.1.0a-umts_sholes.zip";
-                    var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
+                    //var url = "https://github.com/paulcbetts/ModernHttpClient/releases/download/0.9.0/ModernHttpClient-0.9.zip";
+
+                    //var url = "https://mobile.cmtapi.com/v1";
+                    //var url = "https://mobile-sandbox.cmtapi.com/v1";
+                    var url = "https://payment.cmtapi.com/v2";
+                    //var url = "https://payment-sandbox.cmtapi.com/v2";
+                    //var url = "http://www.leprogres.fr/";
 
                     var request = new HttpRequestMessage(HttpMethod.Get, url);
                     handler.RegisterForProgress(request, HandleDownloadProgress);

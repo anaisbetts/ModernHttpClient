@@ -12,6 +12,7 @@ using Java.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Globalization;
 using Android.OS;
+using Java.Net;
 
 namespace ModernHttpClient
 {
@@ -32,11 +33,47 @@ namespace ModernHttpClient
 
         public NativeMessageHandler() : this(false, false) {}
 
-        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
+        public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, bool enableRc4Compatibility = false, bool enableClearTextCompatibility = false, NativeCookieHandler cookieHandler = null)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
+            var connectionSpecs = new List<ConnectionSpec>();
 
-            if (customSSLVerification) client.SetHostnameVerifier(new HostnameVerifier());
+            // custom code for RC4 compatibility
+            if (enableRc4Compatibility)
+            {
+                var compatibleTls = ConnectionSpec.CompatibleTls;
+                var ciphersOfCompatibleTls = compatibleTls.CipherSuites().ToList();
+                ciphersOfCompatibleTls.Add(CipherSuite.TlsRsaWithRc4128Sha);
+
+                var modifiedCompatibleTls = new ConnectionSpec.Builder(ConnectionSpec.CompatibleTls)
+                    .TlsVersions(compatibleTls.TlsVersions().ToArray())
+                    .CipherSuites(ciphersOfCompatibleTls.ToArray())
+                    .Build();
+
+                var modifiedCompatibleClearText = new ConnectionSpec.Builder(ConnectionSpec.Cleartext).Build();
+
+                connectionSpecs.Add(modifiedCompatibleTls);
+            }
+            // end custom code
+
+            
+            // custom code for ClearText compatibility
+            if (enableClearTextCompatibility)
+            {
+                var modifiedCompatibleClearText = new ConnectionSpec.Builder(ConnectionSpec.Cleartext).Build();
+                connectionSpecs.Add(modifiedCompatibleClearText);
+            }
+
+            // set compatibility mode if enable
+            if (enableRc4Compatibility || enableClearTextCompatibility)
+            {
+                client = client.SetConnectionSpecs(connectionSpecs);
+            }
+
+            if (customSSLVerification)
+            {
+                client.SetHostnameVerifier(new HostnameVerifier());
+            }
             noCacheCacheControl = (new CacheControl.Builder()).NoCache().Build();
         }
 
@@ -127,12 +164,14 @@ namespace ModernHttpClient
                         throw new CaptiveNetworkException(new Uri(java_uri), new Uri(newUri.ToString()));
                     }
                 }
+            } catch (UnknownHostException ex) {
+                throw new HttpRequestException(string.Format("Unknown host [ URL={0}} ]", url), ex);
             } catch (IOException ex) {
                 if (ex.Message.ToLowerInvariant().Contains("canceled")) {
-                    throw new OperationCanceledException();
+                    throw new OperationCanceledException(string.Format("[ URL={0}} ]", url) + ex.Message, ex);
                 }
-
-                throw;
+                    
+                throw new WebException(string.Format("[ URL={0}} ]", url) + ex.Message, WebExceptionStatus.ConnectFailure);
             }
 
             var respBody = resp.Body();
