@@ -85,7 +85,7 @@ namespace Playground.Android
             };
 
             button.Click += async (o, e) => {
-                var handler = new NativeMessageHandler(throwOnCaptiveNetwork: false, customSSLVerification: true, enableRc4Compatibility: true);
+                var handler = new NativeMessageHandler(throwOnCaptiveNetwork: false, customSSLVerification: true, enableRc4Compatibility: true, enableClearTextCompatibility: true);
                 
                 var client = new HttpClient(handler);
 
@@ -106,6 +106,7 @@ namespace Playground.Android
                     //var url = "https://mobile-sandbox.cmtapi.com/v1";
                     var url = "https://payment.cmtapi.com/v2";
                     //var url = "https://payment-sandbox.cmtapi.com/v2";
+                    //var url = "http://www.leprogres.fr/";
 
                     var request = new HttpRequestMessage(HttpMethod.Get, url);
                     handler.RegisterForProgress(request, HandleDownloadProgress);
