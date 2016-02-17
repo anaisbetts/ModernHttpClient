@@ -149,7 +149,7 @@ namespace ModernHttpClient
         }
 #endif
 
-#if SYSTEM_NET_HTTP
+#if SYSTEM_NET_HTTP || MONOMAC
         internal
 #endif
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
@@ -200,7 +200,11 @@ namespace ModernHttpClient
             return await ret.Task.ConfigureAwait(false);
         }
 
-        class DataTaskDelegate : NSUrlSessionDataDelegate
+#if MONOMAC
+	// Needed since we strip during linking since we're inside a product assembly.
+	[Preserve (AllMembers = true)]
+#endif
+	class DataTaskDelegate : NSUrlSessionDataDelegate
         {
             NativeMessageHandler This { get; set; }
 

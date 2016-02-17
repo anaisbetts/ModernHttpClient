@@ -84,7 +84,7 @@ namespace ModernHttpClient
             }
         }
 
-#if SYSTEM_NET_HTTP
+#if SYSTEM_NET_HTTP || MONOMAC
         internal
 #endif
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
@@ -93,7 +93,7 @@ namespace ModernHttpClient
             return base.SerializeToStreamAsync(stream, context);
         }
 
-#if SYSTEM_NET_HTTP
+#if SYSTEM_NET_HTTP || MONOMAC
         internal
 #endif
         protected override bool TryComputeLength(out long length)
