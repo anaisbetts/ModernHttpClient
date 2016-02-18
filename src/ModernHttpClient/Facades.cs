@@ -43,7 +43,7 @@ namespace ModernHttpClient
         public TimeSpan? Timeout
         {
             get {throw new Exception(wrongVersion);}
-            set { throw new Exception(wrongVersion);}
+            set {throw new Exception(wrongVersion);}
         }
 
         public void RegisterForProgress(HttpRequestMessage request, ProgressDelegate callback)
