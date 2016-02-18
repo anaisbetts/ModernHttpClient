@@ -83,9 +83,9 @@ namespace ModernHttpClient
             if (Timeout != null)
             {
                 var timeout = (long)TimeOut.Value.TotalMilliseconds;
-                client.SetConnectTimeout((long)timeout, TimeUnit.Milliseconds);
-                client.SetWriteTimeout((long)timeout, TimeUnit.Milliseconds);
-                client.SetReadTimeout((long)timeout, TimeUnit.Milliseconds);
+                client.SetConnectTimeout(timeout, TimeUnit.Milliseconds);
+                client.SetWriteTimeout(timeout, TimeUnit.Milliseconds);
+                client.SetReadTimeout(timeout, TimeUnit.Milliseconds);
             }
 
             var java_uri = request.RequestUri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
