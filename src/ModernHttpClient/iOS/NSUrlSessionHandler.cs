@@ -11,6 +11,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using ModernHttpClient.CoreFoundation;
 using ModernHttpClient.Foundation;
+using System.Runtime.InteropServices;
+
 
 #if UNIFIED
 using Foundation;
@@ -31,6 +33,42 @@ namespace ModernHttpClient
         public ByteArrayListStream ResponseBody { get; set; }
         public CancellationToken CancellationToken { get; set; }
         public bool IsCompleted { get; set; }
+    }
+
+    class WrappedNSInputStream : NSInputStream
+    {
+        private readonly Stream _stream;
+
+        public WrappedNSInputStream (Stream stream)
+        {
+            _stream = stream;
+        }
+
+        public override nint Read (IntPtr buffer, nuint len)
+        {
+            var source = new byte [len];
+            var read = _stream.Read (source, 0, (int)len);
+            Marshal.Copy (source, 0, buffer, (int)len);
+
+            return read;
+        }
+
+        public override bool HasBytesAvailable ()
+        {
+            return true;
+        }
+
+        protected override bool GetBuffer (out IntPtr buffer, out nuint len)
+        {
+            buffer = IntPtr.Zero;
+            len = 0;
+            return false;
+        }
+
+        protected override void Dispose (bool disposing)
+        {
+            _stream?.Dispose ();
+        }
     }
 
     public class NativeMessageHandler : HttpClientHandler
@@ -110,16 +148,16 @@ namespace ModernHttpClient
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
             var headers = request.Headers as IEnumerable<KeyValuePair<string, IEnumerable<string>>>;
-            var ms = new MemoryStream();
+            var stream = Stream.Null;
 
             if (request.Content != null) {
-                await request.Content.CopyToAsync(ms).ConfigureAwait(false);
+                stream = await request.Content.ReadAsStreamAsync ().ConfigureAwait (false);
                 headers = headers.Union(request.Content.Headers).ToArray();
             }
 
             var rq = new NSMutableUrlRequest() {
                 AllowsCellularAccess = true,
-                Body = NSData.FromArray(ms.ToArray()),
+                BodyStream = new WrappedNSInputStream(stream),
                 CachePolicy = (!this.DisableCaching ? NSUrlRequestCachePolicy.UseProtocolCachePolicy : NSUrlRequestCachePolicy.ReloadIgnoringCacheData),
                 Headers = headers.Aggregate(new NSMutableDictionary(), (acc, x) => {
                     acc.Add(new NSString(x.Key), new NSString(String.Join(getHeaderSeparator(x.Key), x.Value)));
@@ -261,8 +299,6 @@ namespace ModernHttpClient
 
             public override void DidReceiveChallenge(NSUrlSession session, NSUrlSessionTask task, NSUrlAuthenticationChallenge challenge, Action<NSUrlSessionAuthChallengeDisposition, NSUrlCredential> completionHandler)
             {
-               
-
                 if (challenge.ProtectionSpace.AuthenticationMethod == NSUrlProtectionSpace.AuthenticationMethodNTLM) {
                     NetworkCredential credentialsToUse;
 
