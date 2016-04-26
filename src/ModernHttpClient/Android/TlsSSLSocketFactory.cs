@@ -20,6 +20,7 @@ namespace ModernHttpClient
         {
             SSLSocket socket = (SSLSocket)factory.CreateSocket(address, port, localAddress, localPort);
             socket.SetEnabledProtocols(socket.GetSupportedProtocols());
+            socket.SetEnabledCipherSuites(socket.GetSupportedCipherSuites());
 
             return socket;
         }
@@ -28,6 +29,7 @@ namespace ModernHttpClient
         {
             SSLSocket socket = (SSLSocket)factory.CreateSocket(host, port);
             socket.SetEnabledProtocols(socket.GetSupportedProtocols());
+            socket.SetEnabledCipherSuites(socket.GetSupportedCipherSuites());
 
             return socket;
         }
@@ -36,6 +38,7 @@ namespace ModernHttpClient
         {
             SSLSocket socket = (SSLSocket)factory.CreateSocket(host, port, localHost, localPort);
             socket.SetEnabledProtocols(socket.GetSupportedProtocols());
+            socket.SetEnabledCipherSuites(socket.GetSupportedCipherSuites());
 
             return socket;
         }
@@ -44,6 +47,7 @@ namespace ModernHttpClient
         {
             SSLSocket socket = (SSLSocket)factory.CreateSocket(host, port);
             socket.SetEnabledProtocols(socket.GetSupportedProtocols());
+            socket.SetEnabledCipherSuites(socket.GetSupportedCipherSuites());
 
             return socket;
         }
@@ -52,6 +56,7 @@ namespace ModernHttpClient
         {
             SSLSocket socket = (SSLSocket)factory.CreateSocket(s, host, port, autoClose);
             socket.SetEnabledProtocols(socket.GetSupportedProtocols());
+            socket.SetEnabledCipherSuites(socket.GetSupportedCipherSuites());
 
             return socket;
         }
@@ -66,6 +71,7 @@ namespace ModernHttpClient
         {
             SSLSocket socket = (SSLSocket)factory.CreateSocket();
             socket.SetEnabledProtocols(socket.GetSupportedProtocols());
+            socket.SetEnabledCipherSuites(socket.GetSupportedCipherSuites());
 
             return socket;
         }
