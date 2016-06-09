@@ -110,6 +110,8 @@ namespace ModernHttpClient
 #if !XAMARIN_MODERN
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
             this.customSSLVerification = customSSLVerification;
+#else
+            this.AllowAutoRedirect = true;
 #endif
 
             this.DisableCaching = false;
