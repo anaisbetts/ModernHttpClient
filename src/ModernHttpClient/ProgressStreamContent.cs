@@ -5,11 +5,21 @@ using System.IO;
 using System.Net;
 using System.Threading;
 
+#if XAMARIN_MODERN
+namespace System.Net.Http {
+#else
 namespace ModernHttpClient
 {
-    public delegate void ProgressDelegate (long bytes, long totalBytes, long totalBytesExpected);
+#endif
+#if !XAMARIN_MODERN
+    public
+#endif
+    delegate void ProgressDelegate (long bytes, long totalBytes, long totalBytesExpected);
 
-    public class ProgressStreamContent : StreamContent
+#if !XAMARIN_MODERN
+    public
+#endif
+    class ProgressStreamContent : StreamContent
     {
         public ProgressStreamContent(Stream stream, CancellationToken token)
             : this(new ProgressStream(stream, token))
@@ -74,12 +84,18 @@ namespace ModernHttpClient
             }
         }
 
+#if SYSTEM_NET_HTTP || MONOMAC
+        internal
+#endif
         protected override Task SerializeToStreamAsync(Stream stream, TransportContext context)
         {
             reset();
             return base.SerializeToStreamAsync(stream, context);
         }
 
+#if SYSTEM_NET_HTTP || MONOMAC
+        internal
+#endif
         protected override bool TryComputeLength(out long length)
         {
             var result = base.TryComputeLength(out length);

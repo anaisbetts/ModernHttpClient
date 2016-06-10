@@ -2,10 +2,15 @@
 using System.Threading.Tasks;
 using System.Threading;
 
+#if XAMARIN_MODERN
+namespace System.Net.Http {
+    sealed class AsyncLock
+#else
 namespace ModernHttpClient
 {
     // Straight-up thieved from http://www.hanselman.com/blog/ComparingTwoTechniquesInNETAsynchronousCoordinationPrimitives.aspx 
     public sealed class AsyncLock
+#endif
     {
         readonly SemaphoreSlim m_semaphore;
         readonly Task<IDisposable> m_releaser;
