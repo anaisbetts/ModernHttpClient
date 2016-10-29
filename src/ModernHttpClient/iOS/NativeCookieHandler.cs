@@ -5,7 +5,7 @@ using System.Net;
 #if UNIFIED
 using Foundation;
 #else
-using MonoTouch.Foundation;
+using Foundation;
 #endif
 
 namespace ModernHttpClient
