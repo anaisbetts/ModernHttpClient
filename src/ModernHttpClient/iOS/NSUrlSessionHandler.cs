@@ -16,8 +16,8 @@ using ModernHttpClient.Foundation;
 using Foundation;
 using Security;
 #else
-using MonoTouch.Foundation;
-using MonoTouch.Security;
+using Foundation;
+using Security;
 using System.Globalization;
 #endif
 
@@ -187,7 +187,7 @@ namespace ModernHttpClient
                     content.Progress = data.Progress;
 
                     // NB: The double cast is because of a Xamarin compiler bug
-                    int status = (int)resp.StatusCode;
+                    int status = (int)(int)resp.StatusCode;
                     var ret = new HttpResponseMessage((HttpStatusCode)status) {
                         Content = content,
                         RequestMessage = data.Request,
@@ -370,7 +370,7 @@ namespace ModernHttpClient
                     // Convert the error code into an enumeration (this is future
                     // proof, rather than just casting integer)
                     NSUrlErrorExtended urlError;
-                    if (!Enum.TryParse<NSUrlErrorExtended>(error.Code.ToString(), out urlError)) urlError = NSUrlErrorExtended.Unknown;
+                    if (!Enum.TryParse<NSUrlErrorExtended>((int)error.Code.ToString(), out urlError)) urlError = NSUrlErrorExtended.Unknown;
 
                     // Parse the enum into a web exception status or exception. Some
                     // of these values don't necessarily translate completely to
@@ -454,7 +454,7 @@ namespace ModernHttpClient
                     // Convert the error code into an enumeration (this is future
                     // proof, rather than just casting integer)
                     CFNetworkErrors networkError;
-                    if (!Enum.TryParse<CFNetworkErrors>(error.Code.ToString(), out networkError)) {
+                    if (!Enum.TryParse<CFNetworkErrors>((int)error.Code.ToString(), out networkError)) {
                         networkError = CFNetworkErrors.CFHostErrorUnknown;
                     }
 

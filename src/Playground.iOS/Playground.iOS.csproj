@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
@@ -126,10 +126,4 @@
     <InterfaceDefinition Include="Playground_iOSViewController.xib" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
-  <ItemGroup>
-    <ProjectReference Include="..\ModernHttpClient\ModernHttpClient.iOS64.csproj">
-      <Project>{6941F069-AC02-40EE-BBF3-9FE3331030EF}</Project>
-      <Name>ModernHttpClient.iOS64</Name>
-    </ProjectReference>
-  </ItemGroup>
 </Project>

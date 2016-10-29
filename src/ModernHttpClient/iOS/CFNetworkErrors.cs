@@ -1,7 +1,7 @@
-﻿#if UNIFIED
+#if UNIFIED
 using Foundation;
 #else
-using MonoTouch.Foundation;
+using Foundation;
 using System.Globalization;
 #endif
 
