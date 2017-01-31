@@ -1,12 +1,46 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Globalization;
+using System.Security.Cryptography.X509Certificates;
+using Mono.Security.X509.Extensions;
 
 namespace ModernHttpClient
 {
     internal static class Utility
     {
-        public static bool MatchHostnameToPattern(string hostname, string pattern)
-        {
+        const string subjectAltNameOid = "2.5.29.17";
+
+        internal static List<string> GetSans(X509Certificate2 certificate) {
+            Mono.Security.X509.X509Certificate mono_cert;
+            Mono.Security.X509.X509Extension ext;
+            SubjectAltNameExtension san;
+            List<string> result;
+
+            result = new List<string>();
+            try {
+                mono_cert = new Mono.Security.X509.X509Certificate(certificate.RawData);
+                ext = mono_cert.Extensions[subjectAltNameOid];
+                if (ext == null) {
+                    return result;
+                }
+
+                san = new SubjectAltNameExtension(ext);
+                if (san != null) {
+                    result.AddRange(san.DNSNames);
+                    result.AddRange(san.IPAddresses);
+                }
+
+                return result;
+            } catch (Exception ex) {
+                return result;
+            }
+        }
+
+        public static bool MatchHostnameToPattern(string hostname, string pattern) {
+            if (string.IsNullOrWhiteSpace(hostname)) {
+                return false;
+            }
+
             // check if this is a pattern
             int index = pattern.IndexOf('*');
             if (index == -1) {
