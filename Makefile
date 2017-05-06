@@ -10,18 +10,18 @@ package: ModernHttpClient.iOS.dll ModernHttpClient.Android.dll ModernHttpClient.
 
 ModernHttpClient.Android.dll: 
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient.Android/ModernHttpClient.Android.csproj
-	mkdir -p ./build/MonoAndroid
-	mv ./src/ModernHttpClient.Android/bin/Release/Modern* ./build/MonoAndroid
+	mkdir -p ./build/monoandroid
+	mv ./src/ModernHttpClient.Android/bin/Release/Modern* ./build/monoandroid
 
 ModernHttpClient.iOS.dll:
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient.iOS/ModernHttpClient.iOS.csproj
-	mkdir -p ./build/Xamarin.iOS10
-	mv ./src/ModernHttpClient.iOS/bin/Release/Modern* ./build/Xamarin.iOS10
+	mkdir -p ./build/xamarinios
+	mv ./src/ModernHttpClient.iOS/bin/Release/Modern* ./build/xamarinios
 
 ModernHttpClient.Portable.dll:
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.csproj
-	mkdir -p ./build/Portable-Net45+WinRT45+WP8+WPA81
-	mv ./src/ModernHttpClient/bin/Release/Modern* ./build/Portable-Net45+WinRT45+WP8+WPA81
+	mkdir -p ./build/netstandard1.6
+	mv ./src/ModernHttpClient/bin/Release/Modern* ./build/netstandard1.6
 
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
