@@ -1,9 +1,4 @@
-﻿#if UNIFIED
-using Foundation;
-#else
-using MonoTouch.Foundation;
-using System.Globalization;
-#endif
+﻿using Foundation;
 
 // These definitions are not currently provided by Xamarin.
 // To avoid a potential conflict, these are in a namespace specific to this library.

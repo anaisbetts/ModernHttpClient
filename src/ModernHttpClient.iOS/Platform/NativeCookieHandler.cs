@@ -1,12 +1,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Net;
-
-#if UNIFIED
 using Foundation;
-#else
-using MonoTouch.Foundation;
-#endif
 
 namespace ModernHttpClient
 {

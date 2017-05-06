@@ -8,8 +8,7 @@
     <OutputType>Library</OutputType>
     <RootNamespace>ModernHttpClient.Portable</RootNamespace>
     <AssemblyName>ModernHttpClient</AssemblyName>
-    <TargetFrameworkProfile>Profile78</TargetFrameworkProfile>
-    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <TargetFrameworkVersion>v5.0</TargetFrameworkVersion>
     <ProductVersion>8.0.30703</ProductVersion>
     <SchemaVersion>2.0</SchemaVersion>
   </PropertyGroup>
@@ -17,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\Portable-Net45+WinRT45+WP8+WPA81</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <IntermediateOutputPath>obj\Debug\Portable-Net45+WinRT45+WP8+WPA81</IntermediateOutputPath>
     <DefineConstants>DEBUG;</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -27,21 +26,19 @@
   <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
-    <OutputPath>bin\Release\Portable-Net45+WinRT45+WP8+WPA81</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <IntermediateOutputPath>obj\Release\Portable-Net45+WinRT45+WP8+WPA81</IntermediateOutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
     <ConsolePause>false</ConsolePause>
   </PropertyGroup>
   <ItemGroup>
-    <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="..\Shared\AssemblyInfo.cs" />
     <Compile Include="Facades.cs" />
-    <Compile Include="CaptiveNetworkException.cs" />
+    <Compile Include="..\Shared\CaptiveNetworkException.cs" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath32)\Microsoft\Portable\$(TargetFrameworkVersion)\Microsoft.Portable.CSharp.targets" />
   <ItemGroup>
-    <Reference Include="System.Net.Http">
-      <HintPath>..\..\ext\portable-headers\System.Net.Http.dll</HintPath>
-    </Reference>
+    <None Include="project.json" />
   </ItemGroup>
 </Project>

@@ -11,15 +11,8 @@ using System.Security.Cryptography.X509Certificates;
 using System.Text.RegularExpressions;
 using ModernHttpClient.CoreFoundation;
 using ModernHttpClient.Foundation;
-
-#if UNIFIED
 using Foundation;
 using Security;
-#else
-using MonoTouch.Foundation;
-using MonoTouch.Security;
-using System.Globalization;
-#endif
 
 namespace ModernHttpClient
 {

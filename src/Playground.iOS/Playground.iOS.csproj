@@ -26,8 +26,6 @@
     <MtouchLink>None</MtouchLink>
     <CodesignEntitlements>Entitlements.plist</CodesignEntitlements>
     <MtouchDebug>true</MtouchDebug>
-    <MtouchUseSGen>true</MtouchUseSGen>
-    <MtouchUseRefCounting>true</MtouchUseRefCounting>
     <MtouchI18n>
     </MtouchI18n>
     <MtouchArch>i386, ARM64</MtouchArch>
@@ -125,11 +123,11 @@
   <ItemGroup>
     <InterfaceDefinition Include="Playground_iOSViewController.xib" />
   </ItemGroup>
-  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
   <ItemGroup>
-    <ProjectReference Include="..\ModernHttpClient\ModernHttpClient.iOS64.csproj">
+    <ProjectReference Include="..\ModernHttpClient.iOS\ModernHttpClient.iOS.csproj">
       <Project>{6941F069-AC02-40EE-BBF3-9FE3331030EF}</Project>
-      <Name>ModernHttpClient.iOS64</Name>
+      <Name>ModernHttpClient.iOS</Name>
     </ProjectReference>
   </ItemGroup>
+  <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>

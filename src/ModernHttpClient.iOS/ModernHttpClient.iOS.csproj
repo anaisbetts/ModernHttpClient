@@ -16,7 +16,7 @@
     <DebugSymbols>true</DebugSymbols>
     <DebugType>full</DebugType>
     <Optimize>false</Optimize>
-    <OutputPath>bin\Debug\Xamarin.iOS10</OutputPath>
+    <OutputPath>bin\Debug\</OutputPath>
     <IntermediateOutputPath>obj\Debug\Xamarin.iOS10</IntermediateOutputPath>
     <DefineConstants>DEBUG;UIKIT;UNIFIED</DefineConstants>
     <ErrorReport>prompt</ErrorReport>
@@ -27,7 +27,7 @@
     <DebugType>full</DebugType>
     <Optimize>true</Optimize>
     <DefineConstants>UIKIT;UNIFIED</DefineConstants>
-    <OutputPath>bin\Release\Xamarin.iOS10</OutputPath>
+    <OutputPath>bin\Release\</OutputPath>
     <IntermediateOutputPath>obj\Release\Xamarin.iOS10</IntermediateOutputPath>
     <ErrorReport>prompt</ErrorReport>
     <WarningLevel>4</WarningLevel>
@@ -41,18 +41,19 @@
     <Reference Include="System.Net.Http" />
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="iOS\NSUrlSessionHandler.cs" />
-    <Compile Include="iOS\AsyncLock.cs" />
-    <Compile Include="Properties\AssemblyInfo.cs" />
-    <Compile Include="CaptiveNetworkException.cs" />
-    <Compile Include="ProgressStreamContent.cs" />
-    <Compile Include="Utility.cs" />
-    <Compile Include="iOS\NativeCookieHandler.cs" />
-    <Compile Include="iOS\CFNetworkErrors.cs" />
-    <Compile Include="iOS\NSErrorExtended.cs" />
+    <Compile Include="..\Shared\AssemblyInfo.cs" />
+    <Compile Include="..\Shared\CaptiveNetworkException.cs" />
+    <Compile Include="..\Shared\ProgressStreamContent.cs" />
+    <Compile Include="..\Shared\Utility.cs" />
+    <Compile Include="Platform\AsyncLock.cs" />
+    <Compile Include="Platform\CFNetworkErrors.cs" />
+    <Compile Include="Platform\NativeCookieHandler.cs" />
+    <Compile Include="Platform\NSErrorExtended.cs" />
+    <Compile Include="Platform\NSUrlSessionHandler.cs" />
   </ItemGroup>
   <ItemGroup>
     <Folder Include="Properties\" />
+    <Folder Include="Platform\" />
   </ItemGroup>
   <Import Project="$(MSBuildExtensionsPath)\Xamarin\iOS\Xamarin.iOS.CSharp.targets" />
 </Project>
