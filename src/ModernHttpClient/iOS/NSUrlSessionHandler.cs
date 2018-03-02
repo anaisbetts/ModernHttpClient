@@ -131,7 +131,7 @@ namespace ModernHttpClient
             };
 
             if (Timeout != null)
-                rq.TimeoutInterval = Timeout.Value.Seconds;
+                rq.TimeoutInterval = Timeout.Value.TotalSeconds;
 
             var op = session.CreateDataTask(rq);
 
