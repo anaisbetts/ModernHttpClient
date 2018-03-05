@@ -32,7 +32,7 @@ namespace ModernHttpClient
         public CancellationToken CancellationToken { get; set; }
         public bool IsCompleted { get; set; }
     }
-     
+
     public class NativeMessageHandler : HttpClientHandler
     {
         readonly NSUrlSession session;
