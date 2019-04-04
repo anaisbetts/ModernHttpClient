@@ -1,4 +1,4 @@
-MDTOOL ?= /Applications/Xamarin\ Studio.app/Contents/MacOS/mdtool
+MDTOOL ?= /Applications/Visual\ Studio.app/Contents/MacOS/vstool
 
 .PHONY: all clean
 
