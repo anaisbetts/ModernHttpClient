@@ -2,21 +2,16 @@ MDTOOL ?= /Applications/Visual\ Studio.app/Contents/MacOS/vstool
 
 .PHONY: all clean
 
-all: ModernHttpClient.iOS.dll ModernHttpClient.iOS64.dll ModernHttpClient.Android.dll ModernHttpClient.Portable.dll
+all: ModernHttpClient.iOS64.dll ModernHttpClient.Android.dll ModernHttpClient.Portable.dll
 
-package: ModernHttpClient.iOS.dll ModernHttpClient.iOS64.dll ModernHttpClient.Android.dll ModernHttpClient.Portable.dll
-	mono vendor/nuget/NuGet.exe pack ./ModernHttpClient.nuspec
+package: ModernHttpClient.iOS64.dll ModernHttpClient.Android.dll ModernHttpClient.Portable.dll
+	nuget pack
 	mv modernhttpclient*.nupkg ./build/
 
 ModernHttpClient.Android.dll: 
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.Android.csproj
 	mkdir -p ./build/MonoAndroid
 	mv ./src/ModernHttpClient/bin/Release/MonoAndroid/Modern* ./build/MonoAndroid
-
-ModernHttpClient.iOS.dll:
-	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.iOS.csproj
-	mkdir -p ./build/MonoTouch
-	mv ./src/ModernHttpClient/bin/Release/MonoTouch/Modern* ./build/MonoTouch
 
 ModernHttpClient.iOS64.dll:
 	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.iOS64.csproj
