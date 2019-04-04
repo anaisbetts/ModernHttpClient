@@ -1,11 +1,11 @@
-﻿<?xml version="1.0"?>
+<?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>2.4.2</version>
-    <authors>Paul Betts</authors>
-    <owners>Paul Betts</owners>
+    <version>2.5.1</version>
+    <authors>Switch Media, Paul Betts</authors>
+    <owners>Switch Media, Paul Betts</owners>
     <licenseUrl>https://github.com/paulcbetts/ModernHttpClient/blob/master/COPYING</licenseUrl>
-    <projectUrl>https://github.com/paulcbetts/ModernHttpClient</projectUrl>
+    <projectUrl>https://github.com/Switch-Media/ModernHttpClient</projectUrl>
     <id>modernhttpclient</id>
     <title>ModernHttpClient</title>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>

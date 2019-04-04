@@ -30,7 +30,7 @@ Library, and it will use the correct version on all platforms.
 make
 ```
 
-## Why doesn't this build in Xamarin Studio? What gives?
+## Why doesn't this build in Visual Studio? What gives?
 
 ```sh
 ## Run this first

@@ -42,6 +42,7 @@
   <ItemGroup>
     <Reference Include="System.Net.Http">
       <HintPath>..\..\ext\portable-headers\System.Net.Http.dll</HintPath>
+      <IncludeInPackage>false</IncludeInPackage>
     </Reference>
   </ItemGroup>
 </Project>
