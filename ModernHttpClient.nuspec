@@ -1,7 +1,7 @@
 <?xml version="1.0"?>
 <package xmlns="http://schemas.microsoft.com/packaging/2011/08/nuspec.xsd">
   <metadata>
-    <version>2.5.0</version>
+    <version>2.5.1</version>
     <authors>Switch Media, Paul Betts</authors>
     <owners>Switch Media, Paul Betts</owners>
     <licenseUrl>https://github.com/paulcbetts/ModernHttpClient/blob/master/COPYING</licenseUrl>
