@@ -19,11 +19,11 @@ ModernHttpClient.iOS64.dll:
 	mv ./src/ModernHttpClient/bin/Release/Xamarin.iOS10/Modern* ./build/Xamarin.iOS10
 
 ModernHttpClient.Portable.dll:
-	$(MDTOOL) build -c:Release ./src/ModernHttpClient/ModernHttpClient.Portable.csproj
-	mkdir -p ./build/Portable-Net45+WinRT45+WP8+WPA81
-	mv ./src/ModernHttpClient/bin/Release/Portable-Net45+WinRT45+WP8+WPA81/Modern* ./build/Portable-Net45+WinRT45+WP8+WPA81
+	dotnet build ./src/ModernHttpClient/Portable/ModernHttpClient.Portable.csproj -c:Release
+	mkdir -p ./build/netstandard2.0
+	mv ./src/ModernHttpClient/Portable/bin/Release/netstandard2.0/Modern* ./build/netstandard2.0
 
 clean:
 	$(MDTOOL) build -t:Clean ModernHttpClient.sln
-	rm *.dll
+	dotnet clean ./src/ModernHttpClient/Portable/ModernHttpClient.Portable.csproj
 	rm -rf build

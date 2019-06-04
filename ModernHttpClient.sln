@@ -7,7 +7,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playground.Android", "src\P
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Playground.iOS", "src\Playground.iOS\Playground.iOS.csproj", "{2CE837CD-9B97-4058-9156-339697EEE228}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.Portable", "src\ModernHttpClient\ModernHttpClient.Portable.csproj", "{6DD98593-4498-463D-B16E-F6CC5A928B79}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.Portable", "src\ModernHttpClient\Portable\ModernHttpClient.Portable.csproj", "{6DD98593-4498-463D-B16E-F6CC5A928B79}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ModernHttpClient.iOS64", "src\ModernHttpClient\ModernHttpClient.iOS64.csproj", "{6941F069-AC02-40EE-BBF3-9FE3331030EF}"
 EndProject
