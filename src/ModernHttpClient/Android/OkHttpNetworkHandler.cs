@@ -12,6 +12,7 @@ using Java.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Globalization;
 using Android.OS;
+using Java.Util.Concurrent;
 
 namespace ModernHttpClient
 {
@@ -79,6 +80,11 @@ namespace ModernHttpClient
 
         protected override async Task<HttpResponseMessage> SendAsync(HttpRequestMessage request, CancellationToken cancellationToken)
         {
+            var timeOut = TimeOut?.TotalMilliseconds ?? 90*1000; // 90 sec is default value provided by orginal HttpClient in .NET
+            client.SetConnectTimeout((long)timeOut, TimeUnit.Milliseconds);
+            client.SetWriteTimeout((long) timeOut, TimeUnit.Milliseconds);
+            client.SetReadTimeout((long)timeOut, TimeUnit.Milliseconds);
+
             var java_uri = request.RequestUri.GetComponents(UriComponents.AbsoluteUri, UriFormat.UriEscaped);
             var url = new Java.Net.URL(java_uri);
 
@@ -158,6 +164,11 @@ namespace ModernHttpClient
 
             return ret;
         }
+
+        /// <summary>
+        /// Gets or sets the number of milliseconds to wait before the request times out.
+        /// </summary>
+        public TimeSpan? TimeOut { get; set; }
     }
 
     public static class AwaitableOkHttp
