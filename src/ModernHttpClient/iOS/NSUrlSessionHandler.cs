@@ -263,7 +263,7 @@ namespace ModernHttpClient
             {
                
 
-                if (challenge.ProtectionSpace.AuthenticationMethod == NSUrlProtectionSpace.AuthenticationMethodNTLM) {
+                if (challenge.PreviousFailureCount == 0 && challenge.ProtectionSpace.AuthenticationMethod == NSUrlProtectionSpace.AuthenticationMethodNTLM) {
                     NetworkCredential credentialsToUse;
 
                     if (This.Credentials != null) {
