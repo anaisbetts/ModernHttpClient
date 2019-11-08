@@ -52,6 +52,7 @@ namespace ModernHttpClient
         readonly bool customSSLVerification;
 
         public bool DisableCaching { get; set; }
+        public TimeSpan? Timeout { get; set; }
 
         public NativeMessageHandler(): this(false, false) { }
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null, SslProtocol? minimumSSLProtocol = null)
@@ -128,6 +129,9 @@ namespace ModernHttpClient
                 HttpMethod = request.Method.ToString().ToUpperInvariant(),
                 Url = NSUrl.FromString(request.RequestUri.AbsoluteUri),
             };
+
+            if (Timeout != null)
+                rq.TimeoutInterval = Timeout.Value.TotalSeconds;
 
             var op = session.CreateDataTask(rq);
 
