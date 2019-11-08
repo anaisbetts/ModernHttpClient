@@ -12,6 +12,7 @@ using Java.IO;
 using System.Security.Cryptography.X509Certificates;
 using System.Globalization;
 using Android.OS;
+using Java.Net;
 
 namespace ModernHttpClient
 {
@@ -127,12 +128,16 @@ namespace ModernHttpClient
                         throw new CaptiveNetworkException(new Uri(java_uri), new Uri(newUri.ToString()));
                     }
                 }
+            } catch (UnknownHostException ex) {
+                throw new HttpRequestException("Unknown host", ex);
             } catch (IOException ex) {
                 if (ex.Message.ToLowerInvariant().Contains("canceled")) {
-                    throw new OperationCanceledException();
+                    throw new OperationCanceledException(ex.Message, ex);
                 }
 
-                throw;
+                throw new HttpRequestException(
+                    ex.Message,
+                    ex);
             }
 
             var respBody = resp.Body();
