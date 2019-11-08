@@ -198,7 +198,7 @@ namespace ModernHttpClient
 
         public bool Verify(string hostname, ISSLSession session)
         {
-            return verifyServerCertificate(hostname, session) & verifyClientCiphers(hostname, session);
+            return verifyServerCertificate(hostname, session);
         }
 
         /// <summary>
@@ -260,23 +260,6 @@ namespace ModernHttpClient
         bail:
             // Call the delegate to validate
             return ServicePointManager.ServerCertificateValidationCallback(hostname, root, chain, errors);
-        }
-
-        /// <summary>
-        /// Verifies client ciphers and is only available in Mono and Xamarin products.
-        /// </summary>
-        /// <returns><c>true</c>, if client ciphers was verifyed, <c>false</c> otherwise.</returns>
-        /// <param name="hostname"></param>
-        /// <param name="session"></param>
-        static bool verifyClientCiphers(string hostname, ISSLSession session)
-        {
-            var callback = ServicePointManager.ClientCipherSuitesCallback;
-            if (callback == null) return true;
-
-            var protocol = session.Protocol.StartsWith("SSL", StringComparison.InvariantCulture) ? SecurityProtocolType.Ssl3 : SecurityProtocolType.Tls;
-            var acceptedCiphers = callback(protocol, new[] { session.CipherSuite });
-
-            return acceptedCiphers.Contains(session.CipherSuite);
         }
     }
 }
