@@ -32,6 +32,8 @@ namespace ModernHttpClient
 
         public NativeMessageHandler() : this(false, false) {}
 
+		protected OkHttpClient Client { get { return client; } }
+
         public NativeMessageHandler(bool throwOnCaptiveNetwork, bool customSSLVerification, NativeCookieHandler cookieHandler = null)
         {
             this.throwOnCaptiveNetwork = throwOnCaptiveNetwork;
