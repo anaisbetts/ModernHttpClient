@@ -330,7 +330,13 @@ namespace ModernHttpClient
 
                 var subject = root.Subject;
                 var subjectCn = cnRegex.Match(subject).Groups[1].Value;
+                bool match;
+                List<string> subjects;
 
+                match = false;
+                subjects = Utility.GetSans(root);
+                subjects.Insert(0, subjectCn);
+                for (int i = 0; i < subjects.Count; i++) {
                 if (String.IsNullOrWhiteSpace(subjectCn) || !Utility.MatchHostnameToPattern(task.CurrentRequest.Url.Host, subjectCn)) {
                     errors = SslPolicyErrors.RemoteCertificateNameMismatch;
                     goto sslErrorVerify;
